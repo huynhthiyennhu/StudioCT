@@ -51,16 +51,7 @@ public class Studio {
     @JoinColumn(name = "ward_id", nullable = false)
     private Ward ward;
 
-    @ManyToOne
-    @JoinColumn(name = "street_id", nullable = true)
-    private Street street;
-    public Street getStreet() {
-        return street;
-    }
 
-    public void setStreet(Street street) {
-        this.street = street;
-    }
 
     public Ward getWard() {
         return ward;

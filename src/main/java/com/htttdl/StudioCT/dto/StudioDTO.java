@@ -16,7 +16,6 @@ public class StudioDTO {
     private List<ImageDTO> images;
     private WardDTO ward;
     private String thumbnail;
-    private StreetDTO street;
 
     public String getThumbnail() {
         return thumbnail;
@@ -35,13 +34,7 @@ public class StudioDTO {
         this.ward = ward;
     }
 
-    public StreetDTO getStreet() {
-        return street;
-    }
-
-    public void setStreet(StreetDTO street) {
-        this.street = street;
-    }
+   
 
     public StudioTypeDTO getStudioType() {
         return studioType;

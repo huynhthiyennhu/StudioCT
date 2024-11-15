@@ -24,8 +24,6 @@ public class Ward {
         this.district = district;
     }
 
-    @OneToMany(mappedBy = "ward", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Street> streets;
 
     @OneToMany(mappedBy = "ward", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Studio> studios;
@@ -47,13 +45,6 @@ public class Ward {
         this.name = name;
     }
 
-    public List<Street> getStreets() {
-        return streets;
-    }
-
-    public void setStreets(List<Street> streets) {
-        this.streets = streets;
-    }
 
     public List<Studio> getStudios() {
         return studios;
