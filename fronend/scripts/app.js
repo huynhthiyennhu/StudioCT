@@ -1,5 +1,5 @@
 // Khởi tạo bản đồ tại tọa độ Cần Thơ
-var map = L.map('map').setView([10.0452, 105.7469], 13);
+var map = L.map('map').setView([10.0292, 105.7673], 16);
 
 // Thêm tile layer từ OpenStreetMap
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -220,6 +220,7 @@ var drawControl = new L.Control.Draw({
         circle: {
             shapeOptions: {
                 color: '#662d91'
+
             }
         },
         rectangle: {
@@ -307,6 +308,237 @@ function loadStudios() {
         });
 }
 //===========================================================================================================
+//thêm studio mới===========================================================================================
+// Hàm lấy danh sách loại studio từ API
+async function fetchStudioTypes() {
+    try {
+        const response = await fetch('http://localhost:8080/api/studio-types');
+        if (!response.ok) throw new Error('Không thể lấy danh sách loại studio.');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching studio types:', error);
+        return [];
+    }
+}
+
+// Hàm lấy danh sách quận từ API
+async function fetchDistricts() {
+    try {
+        const response = await fetch('http://localhost:8080/api/districts');
+        if (!response.ok) throw new Error('Không thể lấy danh sách quận.');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching districts:', error);
+        return [];
+    }
+}
+
+// Hàm xử lý khi nhấp vào bản đồ để chọn tọa độ
+function enableAddStudioMode() {
+    let selectedLatLng = null;
+
+    Swal.fire({
+        title: 'Chọn vị trí trên bản đồ',
+        text: 'Nhấp vào bản đồ để chọn vị trí của studio.',
+        icon: 'info',
+        timer: 5000,
+        showConfirmButton: false
+    });
+
+    // Bật sự kiện click để chọn tọa độ
+    const onMapClick = function (e) {
+        selectedLatLng = e.latlng;
+
+        // Hiển thị form thêm studio
+        map.off('click', onMapClick); // Tắt sự kiện click sau khi chọn tọa độ
+        showAddStudioForm(selectedLatLng);
+    };
+
+    map.on('click', onMapClick);
+}
+
+// Hàm hiển thị form thêm studio mới sử dụng SweetAlert2
+// Hàm lấy địa chỉ từ tọa độ thông qua Nominatim API
+async function fetchAddressFromCoordinates(lat, lng) {
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+    const data = await response.json();
+    return data.display_name || "Không tìm thấy địa chỉ";
+}
+
+// Hàm hiển thị form thêm studio mới với tự động điền địa chỉ
+async function showAddStudioForm(selectedLatLng) {
+    if (!selectedLatLng) {
+        console.error("selectedLatLng không được xác định.");
+        return;
+    }
+
+    // Lấy danh sách loại studio và quận
+    const studioTypes = await fetchStudioTypes();
+    const districts = await fetchDistricts();
+
+    // Lấy địa chỉ từ tọa độ đã chọn
+    const address = await fetchAddressFromCoordinates(selectedLatLng.lat, selectedLatLng.lng);
+
+    // Tạo HTML cho các tùy chọn trong select
+    const studioTypeOptions = studioTypes.map(
+        (type) => `<option value="${type.id}">${type.name}</option>`
+    ).join('');
+    const districtOptions = districts.map(
+        (district) => `<option value="${district.id}">${district.name}</option>`
+    ).join('');
+
+    Swal.fire({
+        title: '<h4 class="text-primary mb-3">Thêm Studio Mới</h4>',
+        html: `
+            <style>
+                .swal2-popup { width: 500px; padding: 20px; }
+                .swal2-input, .swal2-select {
+                    width: 100%;
+                    padding: 8px;
+                    border-radius: 0.25rem;
+                    border: 1px solid #ced4da;
+                    margin-bottom: 15px;
+                }
+                .swal2-html-container label {
+                    display: block;
+                    margin-bottom: 5px;
+                    font-weight: 500;
+                    text-align: left;
+                }
+            </style>
+            <div class="form-group">
+                <label for="studio-name" class="form-label">Tên Studio:</label>
+                <input type="text" id="studio-name-input" class="form-control" required>
+            </div>
+           
+            <div class="form-group">
+                <label for="studio-phone" class="form-label">Số Điện Thoại:</label>
+                <input type="text" id="studio-phone-input" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="studio-type" class="form-label">Loại Studio:</label>
+                <select id="studio-type-input" class="form-select">${studioTypeOptions}</select>
+            </div>
+            <div class="form-group">
+                <label for="studio-district" class="form-label">Quận:</label>
+                <select id="studio-district-input" class="form-select">${districtOptions}</select>
+            </div>
+             <div class="form-group">
+                <label for="studio-address" class="form-label">Địa Chỉ:</label>
+                <input type="text" id="studio-address-input" class="form-control" value="${address}" required>
+            </div>
+            <p class="text-muted"><b>Vị trí đã chọn:</b> Latitude: ${selectedLatLng.lat.toFixed(6)}, Longitude: ${selectedLatLng.lng.toFixed(6)}</p>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-check"></i> Thêm Studio',
+        cancelButtonText: '<i class="fas fa-times"></i> Hủy',
+        customClass: {
+            confirmButton: 'btn btn-primary mx-1',
+            cancelButton: 'btn btn-secondary mx-1'
+        },
+        preConfirm: () => {
+            const name = Swal.getPopup().querySelector('#studio-name-input').value.trim();
+            const address = Swal.getPopup().querySelector('#studio-address-input').value.trim();
+            const phone = Swal.getPopup().querySelector('#studio-phone-input').value.trim();
+            const studioTypeId = Swal.getPopup().querySelector('#studio-type-input').value.trim();
+            const districtId = Swal.getPopup().querySelector('#studio-district-input').value.trim();
+
+            if (!name || !address || !phone || !studioTypeId || !districtId) {
+                Swal.showValidationMessage(`Vui lòng nhập đầy đủ thông tin.`);
+            }
+
+            return { name, address, phone, studioTypeId, districtId, latitude: selectedLatLng.lat, longitude: selectedLatLng.lng };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const { name, address, phone, studioTypeId, districtId, latitude, longitude } = result.value;
+
+            fetch('http://localhost:8080/api/studios', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    address: address,
+                    latitude: latitude,
+                    longitude: longitude,
+                    phone: phone,
+                    studioType: { id: parseInt(studioTypeId) },
+                    ward: { district: { id: parseInt(districtId) } },
+                    rating: 0
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Không thể thêm studio mới.');
+                }
+                return response.json();
+            })
+            .then(newStudio => {
+                createMarker(newStudio);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: 'Thêm studio mới thành công!'
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi!',
+                    text: 'Không thể thêm studio mới.'
+                });
+            });
+        }
+    });
+}
+
+
+
+// Nút kích hoạt chế độ chọn vị trí
+document.getElementById('add-studio-btn').addEventListener('click', enableAddStudioMode);
+
+//===========================================================================================================
+// Hàm để hiển thị popup với tọa độ
+// Hàm để hiển thị popup với tọa độ và địa chỉ
+function showCoordinatesAndAddressPopup(e) {
+    var lat = e.latlng.lat.toFixed(6);
+    var lng = e.latlng.lng.toFixed(6);
+
+    // Tạo nội dung popup ban đầu với tọa độ
+    var popupContent = `<b>Tọa độ đã chọn:</b><br>Latitude: ${lat}<br>Longitude: ${lng}<br>Đang lấy địa chỉ...`;
+    var popup = L.popup()
+        .setLatLng(e.latlng)
+        .setContent(popupContent)
+        .openOn(map);
+
+    // Gửi yêu cầu đến API Nominatim để lấy địa chỉ
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.display_name) {
+                // Cập nhật nội dung popup với địa chỉ
+                popup.setContent(`<b>Tọa độ:</b><br>Vĩ độ: ${lat}<br>Kinh độ: ${lng}<br><b>Địa chỉ:</b> ${data.display_name}`);
+            } else {
+                popup.setContent(`<b>Tọa độ đã chọn:</b><br>Latitude: ${lat}<br>Longitude: ${lng}<br>Không tìm thấy địa chỉ.`);
+            }
+        })
+        .catch(error => {
+            console.error('Lỗi khi lấy địa chỉ:', error);
+            popup.setContent(`<b>Tọa độ:</b><br>Vĩ độ: ${lat}<br>Kinh độ: ${lng}<br>Không thể lấy địa chỉ.`);
+        });
+}
+
+// Thêm sự kiện click vào bản đồ để hiển thị tọa độ và địa chỉ
+map.on('click', showCoordinatesAndAddressPopup);
+//==========================================================================================================
+
+
+
+
+
 // Hàm lấy danh sách tên studio và thêm vào combobox
 function populateFeatureFilter() {
     fetch('http://localhost:8080/api/studios/names') // Endpoint để lấy danh sách tên studio
@@ -727,107 +959,6 @@ function showTopRatedForm() {
     });
 }
 
-// Hàm xử lý khi nhấp vào bản đồ để chọn tọa độ
-function enableAddStudioMode() {
-    let selectedLatLng = null;
-
-    Swal.fire({
-        title: 'Chọn vị trí trên bản đồ',
-        text: 'Nhấp vào bản đồ để chọn vị trí của studio.',
-        icon: 'info',
-        timer: 5000,
-        showConfirmButton: false
-    });
-
-    // Bật sự kiện click để chọn tọa độ
-    const onMapClick = function (e) {
-        selectedLatLng = e.latlng;
-
-        // Hiển thị form thêm studio
-        map.off('click', onMapClick); // Tắt sự kiện click sau khi chọn tọa độ
-        showAddStudioForm(selectedLatLng);
-    };
-
-    map.on('click', onMapClick);
-}
-
-// Hàm hiển thị form thêm studio mới sử dụng SweetAlert2
-function showAddStudioForm(selectedLatLng) {
-    Swal.fire({
-        title: 'Thêm Studio Mới',
-        html: `
-            <label for="studio-name">Tên Studio:</label>
-            <input type="text" id="studio-name-input" class="swal2-input" required>
-            <label for="studio-address">Địa Chỉ:</label>
-            <input type="text" id="studio-address-input" class="swal2-input" required>
-            <label for="studio-phone">Số Điện Thoại:</label>
-            <input type="text" id="studio-phone-input" class="swal2-input" required>
-            <label for="studio-type">Loại Studio:</label>
-            <input type="text" id="studio-type-input" class="swal2-input" required>
-            <p><b>Vị trí đã chọn:</b> Latitude: ${selectedLatLng.lat}, Longitude: ${selectedLatLng.lng}</p>
-        `,
-        showCancelButton: true,
-        confirmButtonText: 'Thêm Studio',
-        preConfirm: () => {
-            const name = Swal.getPopup().querySelector('#studio-name-input').value.trim();
-            const address = Swal.getPopup().querySelector('#studio-address-input').value.trim();
-            const phone = Swal.getPopup().querySelector('#studio-phone-input').value.trim();
-            const type = Swal.getPopup().querySelector('#studio-type-input').value.trim();
-
-            if (!name || !address || !phone || !type) {
-                Swal.showValidationMessage(`Vui lòng nhập đầy đủ thông tin.`);
-            }
-
-            return { name, address, phone, type, latitude: selectedLatLng.lat, longitude: selectedLatLng.lng };
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const { name, address, phone, type, latitude, longitude } = result.value;
-
-            // Gửi yêu cầu thêm studio đến backend
-            fetch('http://localhost:8080/api/studios', { // Thay đổi URL nếu cần
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: name,
-                    address: address,
-                    latitude: latitude,
-                    longitude: longitude,
-                    phone: phone,
-                    type: type,
-                    rating: 0
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Không thể thêm studio mới.');
-                }
-                return response.json();
-            })
-            .then(newStudio => {
-                createMarker(newStudio);
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Thành công!',
-                    text: 'Thêm studio mới thành công!'
-                });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Lỗi!',
-                    text: 'Không thể thêm studio mới.'
-                });
-            });
-        }
-    });
-}
-
-// Nút kích hoạt chế độ chọn vị trí
-document.getElementById('add-studio-btn').addEventListener('click', enableAddStudioMode);
 
 
 // Hàm tìm kiếm các đối tượng trong khoảng cách
