@@ -5,11 +5,11 @@ var map = L.map('map').setView([10.0452, 105.7469], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
-
+loadStudios();
 // Định nghĩa các style cho point, line và polygon
 var pointStyle = L.icon({
-    iconUrl: "path_to_your_icon/marker-icon.png", // Thay bằng đường dẫn chính xác tới icon của bạn
-    shadowUrl: "path_to_your_icon/marker-shadow.png", // Thay bằng đường dẫn chính xác tới shadow icon
+    iconUrl: "./assets/images/icon2.jpg", // Đường dẫn chính xác tới icon của bạn
+    shadowUrl: "path_to_your_icon/marker-shadow.png",
     iconAnchor: [13, 41]
 });
 var lineStyle = { color: "blue", weight: 2 };
@@ -18,27 +18,116 @@ var polygonStyle = { color: "red", fillColor: "yellow", weight: 4 };
 // LayerGroup để chứa các đối tượng studio
 var studioLayerGroup = L.layerGroup().addTo(map);
 
-// LayerGroup để chứa điểm nhấp và các đối tượng tìm thấy
-var clickLocationLayer = L.layerGroup().addTo(map);
-var nearbyFeaturesLayer = L.layerGroup().addTo(map);
+// Khởi tạo FeatureGroup cho các đối tượng đã vẽ
+var drawnItems = new L.FeatureGroup();
+map.addLayer(drawnItems);
 
-// Biến lưu trữ tuyến đường hiện tại
-var currentRoute = null;
+// Hàm lưu trữ dữ liệu GeoJSON vào LocalStorage
+function saveDrawnItems() {
+    var data = drawnItems.toGeoJSON();
+    localStorage.setItem("drawnItems", JSON.stringify(data));
+    console.log("Đã lưu dữ liệu hình vẽ:", data);
+}
 
-// Biến lưu trữ studio được chọn để chỉ đường
-var selectedStudio = null;
+// Hàm tải dữ liệu GeoJSON từ LocalStorage và hiển thị trên bản đồ
+function loadDrawnItems() {
+    var data = localStorage.getItem("drawnItems");
+    if (data) {
+        var geojsonLayer = L.geoJSON(JSON.parse(data), {
+            onEachFeature: function(feature, layer) {
+                drawnItems.addLayer(layer);
+            }
+        });
+        map.fitBounds(drawnItems.getBounds());
+        console.log("Đã tải dữ liệu hình vẽ từ LocalStorage.");
+    }
+}
 
-// Icon cho người dùng
-var userIcon = L.icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64572.png', 
-    iconSize: [25, 25],
-    iconAnchor: [12, 25],
-    popupAnchor: [0, -25]
+// Thiết lập các tùy chọn cho công cụ vẽ
+var drawControl = new L.Control.Draw({
+    position: 'topleft',
+    draw: {
+        polyline: {
+            shapeOptions: {
+                color: '#f357a1',
+                weight: 2
+            }
+        },
+        polygon: {
+            allowIntersection: false,
+            showArea: true,
+            shapeOptions: {
+                color: '#bada55'
+            }
+        },
+        circle: {
+            shapeOptions: {
+                color: '#662d91'
+            }
+        },
+        rectangle: {
+            shapeOptions: {
+                color: '#fbb03b'
+            }
+        },
+        marker: {
+            icon: L.icon({
+                iconUrl: './assets/images/icon2.jpg',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41]
+            })
+        }
+    },
+    edit: {
+        featureGroup: drawnItems,
+        remove: true
+    }
+});
+map.addControl(drawControl);
+
+// Sự kiện khi một hình dạng mới được vẽ
+map.on(L.Draw.Event.CREATED, function(event) {
+    var layer = event.layer;
+    drawnItems.addLayer(layer);
+
+    // Cập nhật LocalStorage mỗi khi một hình mới được vẽ
+    saveDrawnItems();
+
+    Swal.fire({
+        title: 'Hình dạng đã được vẽ',
+        text: 'Đã thêm một đối tượng mới vào bản đồ.',
+        icon: 'success'
+    });
+});
+
+// Sự kiện khi một đối tượng được chỉnh sửa
+map.on(L.Draw.Event.EDITED, function(event) {
+    saveDrawnItems();
+    Swal.fire({
+        title: 'Hình dạng đã được chỉnh sửa',
+        text: 'Dữ liệu đã được cập nhật.',
+        icon: 'info'
+    });
+});
+
+// Sự kiện khi một đối tượng bị xóa
+map.on(L.Draw.Event.DELETED, function() {
+    saveDrawnItems();
+    Swal.fire({
+        title: 'Hình dạng đã bị xóa',
+        text: 'Dữ liệu đã được cập nhật.',
+        icon: 'warning'
+    });
+});
+
+// Tải các đối tượng đã vẽ từ LocalStorage khi trang được tải
+document.addEventListener('DOMContentLoaded', function() {
+    loadDrawnItems();
 });
 
 // Hàm lấy và hiển thị tất cả các studio từ backend
 function loadStudios() {
-    fetch('http://localhost:8080/api/studios') // Thay đổi URL nếu cần
+    fetch('http://localhost:8080/api/studios') // URL API để lấy tất cả studio
         .then(response => {
             if (!response.ok) {
                 throw new Error('Không thể lấy danh sách studio.');
@@ -113,6 +202,7 @@ function createMarker(studio) {
 
     console.log(`Marker cho studio ${studio.name} đã được thêm vào bản đồ.`);
 }
+
 
 // Hàm hiển thị chi tiết studio trong modal
 function showStudioDetail(studioId) {
@@ -392,8 +482,32 @@ function showTopRatedForm() {
     });
 }
 
+// Hàm xử lý khi nhấp vào bản đồ để chọn tọa độ
+function enableAddStudioMode() {
+    let selectedLatLng = null;
+
+    Swal.fire({
+        title: 'Chọn vị trí trên bản đồ',
+        text: 'Nhấp vào bản đồ để chọn vị trí của studio.',
+        icon: 'info',
+        timer: 5000,
+        showConfirmButton: false
+    });
+
+    // Bật sự kiện click để chọn tọa độ
+    const onMapClick = function (e) {
+        selectedLatLng = e.latlng;
+
+        // Hiển thị form thêm studio
+        map.off('click', onMapClick); // Tắt sự kiện click sau khi chọn tọa độ
+        showAddStudioForm(selectedLatLng);
+    };
+
+    map.on('click', onMapClick);
+}
+
 // Hàm hiển thị form thêm studio mới sử dụng SweetAlert2
-function showAddStudioForm() {
+function showAddStudioForm(selectedLatLng) {
     Swal.fire({
         title: 'Thêm Studio Mới',
         html: `
@@ -405,6 +519,7 @@ function showAddStudioForm() {
             <input type="text" id="studio-phone-input" class="swal2-input" required>
             <label for="studio-type">Loại Studio:</label>
             <input type="text" id="studio-type-input" class="swal2-input" required>
+            <p><b>Vị trí đã chọn:</b> Latitude: ${selectedLatLng.lat}, Longitude: ${selectedLatLng.lng}</p>
         `,
         showCancelButton: true,
         confirmButtonText: 'Thêm Studio',
@@ -417,76 +532,58 @@ function showAddStudioForm() {
             if (!name || !address || !phone || !type) {
                 Swal.showValidationMessage(`Vui lòng nhập đầy đủ thông tin.`);
             }
-            return { name, address, phone, type };
+
+            return { name, address, phone, type, latitude: selectedLatLng.lat, longitude: selectedLatLng.lng };
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            var { name, address, phone, type } = result.value;
+            const { name, address, phone, type, latitude, longitude } = result.value;
 
-            // Lấy vị trí từ địa chỉ bằng Geocoding (sử dụng Nominatim)
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length > 0) {
-                        var latitude = parseFloat(data[0].lat);
-                        var longitude = parseFloat(data[0].lon);
-                        // Gửi yêu cầu thêm studio đến backend
-                        fetch('http://localhost:8080/api/studios', { // Thay đổi URL nếu cần
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                name: name,
-                                address: address,
-                                latitude: latitude,
-                                longitude: longitude,
-                                phone: phone,
-                                type: type,
-                                rating: 0
-                            })
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Không thể thêm studio mới.');
-                            }
-                            return response.json();
-                        })
-                        .then(newStudio => {
-                            createMarker(newStudio);
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Thành công!',
-                                text: 'Thêm studio mới thành công!'
-                            });
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Lỗi!',
-                                text: 'Không thể thêm studio mới.'
-                            });
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Lỗi!',
-                            text: 'Không tìm thấy địa chỉ. Vui lòng kiểm tra lại.'
-                        });
-                    }
+            // Gửi yêu cầu thêm studio đến backend
+            fetch('http://localhost:8080/api/studios', { // Thay đổi URL nếu cần
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    address: address,
+                    latitude: latitude,
+                    longitude: longitude,
+                    phone: phone,
+                    type: type,
+                    rating: 0
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Lỗi!',
-                        text: 'Không thể thực hiện Geocoding.'
-                    });
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Không thể thêm studio mới.');
+                }
+                return response.json();
+            })
+            .then(newStudio => {
+                createMarker(newStudio);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: 'Thêm studio mới thành công!'
                 });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi!',
+                    text: 'Không thể thêm studio mới.'
+                });
+            });
         }
     });
 }
+
+// Nút kích hoạt chế độ chọn vị trí
+document.getElementById('add-studio-btn').addEventListener('click', enableAddStudioMode);
+
 
 // Hàm tìm kiếm các đối tượng trong khoảng cách
 function findFeaturesWithinDistance(latlng, distance) {

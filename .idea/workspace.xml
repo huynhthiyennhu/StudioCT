@@ -4,7 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a45d5a8a-11aa-4fe2-8046-e7957737b8d7" name="Changes" comment="" />
+    <list default="true" id="a45d5a8a-11aa-4fe2-8046-e7957737b8d7" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fronend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/fronend/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fronend/scripts/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/fronend/scripts/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fronend/styles/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/fronend/styles/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/htttdl/StudioCT/config/WebConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/htttdl/StudioCT/config/WebConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/StudioCT-1.0.0.jar" beforeDir="false" afterPath="$PROJECT_DIR$/target/StudioCT-1.0.0.jar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/StudioCT-1.0.0.jar.original" beforeDir="false" afterPath="$PROJECT_DIR$/target/StudioCT-1.0.0.jar.original" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/htttdl/StudioCT/config/WebConfig$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/htttdl/StudioCT/config/WebConfig$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/htttdl/StudioCT/config/WebConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/htttdl/StudioCT/config/WebConfig.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/surefire-reports/TEST-com.htttdl.StudioCT.StudioCtApplicationTests.xml" beforeDir="false" afterPath="$PROJECT_DIR$/target/surefire-reports/TEST-com.htttdl.StudioCT.StudioCtApplicationTests.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/surefire-reports/com.htttdl.StudioCT.StudioCtApplicationTests.txt" beforeDir="false" afterPath="$PROJECT_DIR$/target/surefire-reports/com.htttdl.StudioCT.StudioCtApplicationTests.txt" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -17,6 +30,9 @@
         <option value="Interface" />
       </list>
     </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
@@ -37,6 +53,7 @@
   "keyToString": {
     "Application.StudioCtApplication.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/admin/Downloads/HTTTDL/HTTTDL_backend-main",
