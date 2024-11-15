@@ -1,12 +1,14 @@
 package com.htttdl.StudioCT.service;
 
-import com.htttdl.StudioCT.model.Studio;
+import com.htttdl.StudioCT.dto.StudioDTO;
+import com.htttdl.StudioCT.model.*;
 import com.htttdl.StudioCT.exception.ResourceNotFoundException;
-import com.htttdl.StudioCT.repository.StudioRepository;
+import com.htttdl.StudioCT.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,29 +16,91 @@ import java.util.stream.Collectors;
 public class StudioService {
     @Autowired
     private StudioRepository studioRepository;
+    @Autowired
+    private StudioTypeRepository studioTypeRepository;
+    @Autowired
+    private StreetRepository streetRepository;
+    @Autowired
+    private WardRepository wardRepository;
+    @Autowired
+    private DistrictRepository districtRepository;
+
+    // Lấy tất cả các quận
+    public List<District> getAllDistricts() {
+        return districtRepository.findAll();
+    }
+
+    // Lấy thông tin quận theo ID
+    public District getDistrictById(Long id) {
+        return districtRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("District not found with id: " + id));
+    }
 
     public List<Studio> getAllStudios() {
         return studioRepository.findAll();
     }
 
+
+    // Hàm lấy studio theo ID (đã xử lý ngoại lệ)
     public Studio getStudioById(Long id) {
         return studioRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Studio not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Studio not found with id: " + id));
     }
 
     public Studio createStudio(Studio studio) {
+        if (studio.getWard() != null && studio.getWard().getId() != null) {
+            Ward ward = wardRepository.findById(studio.getWard().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Ward not found with id: " + studio.getWard().getId()));
+            studio.setWard(ward);
+
+            // Kiểm tra và lấy District từ Ward (nếu cần)
+            if (ward.getDistrict() != null) {
+                District district = districtRepository.findById(ward.getDistrict().getId())
+                        .orElseThrow(() -> new ResourceNotFoundException("District not found with id: " + ward.getDistrict().getId()));
+                ward.setDistrict(district);
+            }
+        }
+        if (studio.getStreet() != null && studio.getStreet().getId() != null) {
+            Street street = streetRepository.findById(studio.getStreet().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Street not found with id: " + studio.getStreet().getId()));
+            studio.setStreet(street);
+        }
         return studioRepository.save(studio);
     }
 
     public Studio updateStudio(Long id, Studio studioDetails) {
         Studio studio = getStudioById(id);
+
         studio.setName(studioDetails.getName());
         studio.setAddress(studioDetails.getAddress());
         studio.setLatitude(studioDetails.getLatitude());
         studio.setLongitude(studioDetails.getLongitude());
         studio.setPhone(studioDetails.getPhone());
-        studio.setType(studioDetails.getType());
         studio.setRating(studioDetails.getRating());
+
+        if (studioDetails.getStudioType() != null && studioDetails.getStudioType().getId() != null) {
+            StudioType studioType = studioTypeRepository.findById(studioDetails.getStudioType().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("StudioType not found with id: " + studioDetails.getStudioType().getId()));
+            studio.setStudioType(studioType);
+        }
+        if (studioDetails.getWard() != null && studioDetails.getWard().getId() != null) {
+            Ward ward = wardRepository.findById(studioDetails.getWard().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Ward not found with id: " + studioDetails.getWard().getId()));
+            studio.setWard(ward);
+
+            // Kiểm tra và lấy District từ Ward (nếu cần)
+            if (ward.getDistrict() != null) {
+                District district = districtRepository.findById(ward.getDistrict().getId())
+                        .orElseThrow(() -> new ResourceNotFoundException("District not found with id: " + ward.getDistrict().getId()));
+                ward.setDistrict(district);
+            }
+        }
+        if (studioDetails.getStreet() != null && studioDetails.getStreet().getId() != null) {
+            Street street = streetRepository.findById(studioDetails.getStreet().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Street not found with id: " + studioDetails.getStreet().getId()));
+            studio.setStreet(street);
+        }
+
         return studioRepository.save(studio);
     }
 
@@ -77,4 +141,47 @@ public class StudioService {
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return EARTH_RADIUS * c;
     }
+
+    public List<Studio> getStudiosByFilter(String name, String sortByRating, Long districtId) {
+        // Nếu tất cả các giá trị lọc đều null, trả về tất cả studio
+        if ((name == null || name.isEmpty()) && sortByRating == null && districtId == null) {
+            return studioRepository.findAll();
+        }
+
+        // Lấy tất cả studio
+        List<Studio> studios = studioRepository.findAll();
+
+        // Lọc theo tên (nếu có)
+        if (name != null && !name.isEmpty()) {
+            studios = studios.stream()
+                    .filter(studio -> studio.getName().toLowerCase().contains(name.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        // Lọc theo quận (nếu có)
+        if (districtId != null) {
+            studios = studios.stream()
+                    .filter(studio -> studio.getWard() != null &&
+                            studio.getWard().getDistrict() != null &&
+                            studio.getWard().getDistrict().getId().equals(districtId))
+                    .collect(Collectors.toList());
+        }
+
+        // Sắp xếp theo đánh giá (nếu có)
+        if (sortByRating != null) {
+            if (sortByRating.equalsIgnoreCase("ASC")) {
+                studios = studios.stream()
+                        .sorted(Comparator.comparingDouble(Studio::getRating))
+                        .collect(Collectors.toList());
+            } else if (sortByRating.equalsIgnoreCase("DESC")) {
+                studios = studios.stream()
+                        .sorted(Comparator.comparingDouble(Studio::getRating).reversed())
+                        .collect(Collectors.toList());
+            }
+        }
+
+        return studios;
+    }
+
+
 }
