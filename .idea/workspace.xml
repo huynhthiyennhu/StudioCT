@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="a45d5a8a-11aa-4fe2-8046-e7957737b8d7" name="Changes" comment="">
 <<<<<<< HEAD
+<<<<<<< HEAD
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/fronend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/fronend/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/fronend/scripts/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/fronend/scripts/app.js" afterDir="false" />
@@ -37,12 +38,12 @@
       <change afterPath="$PROJECT_DIR$/src/main/java/com/htttdl/StudioCT/service/DistrictService.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/com/htttdl/StudioCT/service/StudioTypeService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+=======
+>>>>>>> 84002f2ad4ad40912579346ae2ce32bd257e12f3
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/htttdl/StudioCT/controller/ImageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/htttdl/StudioCT/controller/ImageController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/htttdl/StudioCT/controller/StudioController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/htttdl/StudioCT/controller/StudioController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/htttdl/StudioCT/dto/StudioDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/htttdl/StudioCT/dto/StudioDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/htttdl/StudioCT/model/Studio.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/htttdl/StudioCT/model/Studio.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/htttdl/StudioCT/service/StudioService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/htttdl/StudioCT/service/StudioService.java" afterDir="false" />
+<<<<<<< HEAD
       <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/com/htttdl/StudioCT/controller/ImageController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/htttdl/StudioCT/controller/ImageController.class" afterDir="false" />
@@ -51,6 +52,8 @@
       <change beforePath="$PROJECT_DIR$/target/classes/com/htttdl/StudioCT/model/Studio.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/htttdl/StudioCT/model/Studio.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/com/htttdl/StudioCT/service/StudioService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/htttdl/StudioCT/service/StudioService.class" afterDir="false" />
 >>>>>>> 6517dc8eeefe634cb4a9e02d8d965647c60bf2ce
+=======
+>>>>>>> 84002f2ad4ad40912579346ae2ce32bd257e12f3
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

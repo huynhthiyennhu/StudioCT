@@ -1,11 +1,9 @@
 package com.htttdl.StudioCT.controller;
 
 import com.htttdl.StudioCT.dto.*;
-import com.htttdl.StudioCT.model.Street;
 import com.htttdl.StudioCT.model.Studio;
 import com.htttdl.StudioCT.model.StudioType;
 import com.htttdl.StudioCT.model.Ward;
-import com.htttdl.StudioCT.repository.StreetRepository;
 import com.htttdl.StudioCT.repository.StudioRepository;
 import com.htttdl.StudioCT.exception.ResourceNotFoundException;
 import com.htttdl.StudioCT.repository.StudioTypeRepository;
@@ -14,9 +12,6 @@ import com.htttdl.StudioCT.service.StudioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,8 +29,7 @@ public class StudioController {
     @Autowired
     private StudioTypeRepository studioTypeRepository;
 
-    @Autowired
-    private StreetRepository streetRepository;
+
     @Autowired
     private WardRepository wardRepository;
     // API hiển thị tất cả các studio
@@ -52,10 +46,11 @@ public class StudioController {
     public ResponseEntity<List<StudioDTO>> getStudiosByFilter(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String sortByRating, // ASC hoặc DESC
-            @RequestParam(required = false) Long districtId) {
+            @RequestParam(required = false) Long districtId,
+            @RequestParam(required = false) Long studioTypeId) {
 
         // Lấy danh sách studio theo bộ lọc từ service
-        List<Studio> studios = studioService.getStudiosByFilter(name, sortByRating, districtId);
+        List<Studio> studios = studioService.getStudiosByFilter(name, sortByRating, districtId, studioTypeId);
 
         // Chuyển đổi từ entity sang DTO
         List<StudioDTO> studioDTOs = studios.stream()
@@ -101,12 +96,7 @@ public class StudioController {
             throw new IllegalArgumentException("Ward is required");
         }
 
-        // Xử lý Street
-        if (studioDTO.getStreet() != null && studioDTO.getStreet().getId() != null) {
-            Street street = streetRepository.findById(studioDTO.getStreet().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Street not found with id: " + studioDTO.getStreet().getId()));
-            studio.setStreet(street);
-        }
+
 
         // Xử lý StudioType
         if (studioDTO.getStudioType() != null && studioDTO.getStudioType().getId() != null) {
@@ -139,12 +129,7 @@ public class StudioController {
             studio.setWard(ward);
         }
 
-        // Cập nhật Street
-        if (studioDTO.getStreet() != null && studioDTO.getStreet().getId() != null) {
-            Street street = streetRepository.findById(studioDTO.getStreet().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Street not found with id: " + studioDTO.getStreet().getId()));
-            studio.setStreet(street);
-        }
+
 
         // Cập nhật StudioType
         if (studioDTO.getStudioType() != null && studioDTO.getStudioType().getId() != null) {
@@ -243,13 +228,7 @@ public class StudioController {
             dto.setWard(wardDTO);
         }
 
-        // Chuyển đổi Street
-        if (studio.getStreet() != null) {
-            StreetDTO streetDTO = new StreetDTO();
-            streetDTO.setId(studio.getStreet().getId());
-            streetDTO.setName(studio.getStreet().getName());
-            dto.setStreet(streetDTO);
-        }
+
 
         // Chuyển đổi danh sách ảnh
         if (studio.getImages() != null) {

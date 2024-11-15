@@ -18,8 +18,7 @@ public class StudioService {
     private StudioRepository studioRepository;
     @Autowired
     private StudioTypeRepository studioTypeRepository;
-    @Autowired
-    private StreetRepository streetRepository;
+
     @Autowired
     private WardRepository wardRepository;
     @Autowired
@@ -60,11 +59,7 @@ public class StudioService {
                 ward.setDistrict(district);
             }
         }
-        if (studio.getStreet() != null && studio.getStreet().getId() != null) {
-            Street street = streetRepository.findById(studio.getStreet().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Street not found with id: " + studio.getStreet().getId()));
-            studio.setStreet(street);
-        }
+
         return studioRepository.save(studio);
     }
 
@@ -95,11 +90,7 @@ public class StudioService {
                 ward.setDistrict(district);
             }
         }
-        if (studioDetails.getStreet() != null && studioDetails.getStreet().getId() != null) {
-            Street street = streetRepository.findById(studioDetails.getStreet().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Street not found with id: " + studioDetails.getStreet().getId()));
-            studio.setStreet(street);
-        }
+
 
         return studioRepository.save(studio);
     }
@@ -142,7 +133,7 @@ public class StudioService {
         return EARTH_RADIUS * c;
     }
 
-    public List<Studio> getStudiosByFilter(String name, String sortByRating, Long districtId) {
+    public List<Studio> getStudiosByFilter(String name, String sortByRating, Long districtId, Long studioTypeId) {
         // Nếu tất cả các giá trị lọc đều null, trả về tất cả studio
         if ((name == null || name.isEmpty()) && sortByRating == null && districtId == null) {
             return studioRepository.findAll();
@@ -164,6 +155,14 @@ public class StudioService {
                     .filter(studio -> studio.getWard() != null &&
                             studio.getWard().getDistrict() != null &&
                             studio.getWard().getDistrict().getId().equals(districtId))
+                    .collect(Collectors.toList());
+        }
+
+        // Lọc theo loại studio (nếu có)
+        if (studioTypeId != null) {
+            studios = studios.stream()
+                    .filter(studio -> studio.getStudioType() != null &&
+                            studio.getStudioType().getId().equals(studioTypeId))
                     .collect(Collectors.toList());
         }
 
