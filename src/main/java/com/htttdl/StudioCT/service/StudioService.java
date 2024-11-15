@@ -133,7 +133,7 @@ public class StudioService {
         return EARTH_RADIUS * c;
     }
 
-    public List<Studio> getStudiosByFilter(String name, String sortByRating, Long districtId) {
+    public List<Studio> getStudiosByFilter(String name, String sortByRating, Long districtId, Long studioTypeId) {
         // Nếu tất cả các giá trị lọc đều null, trả về tất cả studio
         if ((name == null || name.isEmpty()) && sortByRating == null && districtId == null) {
             return studioRepository.findAll();
@@ -155,6 +155,14 @@ public class StudioService {
                     .filter(studio -> studio.getWard() != null &&
                             studio.getWard().getDistrict() != null &&
                             studio.getWard().getDistrict().getId().equals(districtId))
+                    .collect(Collectors.toList());
+        }
+
+        // Lọc theo loại studio (nếu có)
+        if (studioTypeId != null) {
+            studios = studios.stream()
+                    .filter(studio -> studio.getStudioType() != null &&
+                            studio.getStudioType().getId().equals(studioTypeId))
                     .collect(Collectors.toList());
         }
 

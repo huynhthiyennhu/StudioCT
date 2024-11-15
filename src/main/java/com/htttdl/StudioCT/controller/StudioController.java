@@ -46,10 +46,11 @@ public class StudioController {
     public ResponseEntity<List<StudioDTO>> getStudiosByFilter(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String sortByRating, // ASC hoặc DESC
-            @RequestParam(required = false) Long districtId) {
+            @RequestParam(required = false) Long districtId,
+            @RequestParam(required = false) Long studioTypeId) {
 
         // Lấy danh sách studio theo bộ lọc từ service
-        List<Studio> studios = studioService.getStudiosByFilter(name, sortByRating, districtId);
+        List<Studio> studios = studioService.getStudiosByFilter(name, sortByRating, districtId, studioTypeId);
 
         // Chuyển đổi từ entity sang DTO
         List<StudioDTO> studioDTOs = studios.stream()
