@@ -141,3 +141,9 @@ body, html {
     padding: 5px;
     box-sizing: border-box;
 }
+
+#route-from-two-points-btn:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+}

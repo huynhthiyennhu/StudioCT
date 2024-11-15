@@ -22,6 +22,163 @@ var studioLayerGroup = L.layerGroup().addTo(map);
 var drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
 
+var userIcon = L.icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64572.png', 
+    iconSize: [25, 25],
+    iconAnchor: [12, 25],
+    popupAnchor: [0, -25]
+});
+//chỉ đường tự chọn==========================================================================================
+// Biến lưu trữ hai điểm được chọn
+let startMarker = null;
+let endMarker = null;
+let currentRoute = null; // Đảm bảo biến currentRoute được khai báo toàn cục
+
+// Hàm thiết lập chế độ chọn điểm trên bản đồ
+function enablePointSelection(onPointSelected) {
+    map.once('click', function (e) {
+        const { lat, lng } = e.latlng;
+        onPointSelected(lat, lng);
+    });
+
+    Swal.fire({
+        icon: 'info',
+        title: 'Hướng dẫn!',
+        text: 'Nhấp vào một vị trí trên bản đồ để chọn điểm.',
+    });
+}
+
+// Hàm chỉ đường từ hai điểm đã chọn
+function calculateRouteFromPoints(startLat, startLng, endLat, endLng) {
+    // Nếu đã có tuyến đường trước đó, xóa nó đi
+    if (currentRoute) {
+        map.removeControl(currentRoute);
+    }
+
+    // Kiểm tra tọa độ hợp lệ
+    if (!isValidCoordinates(startLat, startLng) || !isValidCoordinates(endLat, endLng)) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi!',
+            text: 'Tọa độ không hợp lệ. Vui lòng chọn lại điểm trên bản đồ.',
+        });
+        return;
+    }
+
+    // Tạo tuyến đường mới
+    currentRoute = L.Routing.control({
+        waypoints: [
+            L.latLng(startLat, startLng),
+            L.latLng(endLat, endLng)
+        ],
+        routeWhileDragging: false,
+        geocoder: L.Control.Geocoder.nominatim(),
+        showAlternatives: true, // Hiển thị các tuyến đường thay thế
+        altLineOptions: {
+            styles: [
+                { color: 'black', opacity: 0.15, weight: 9 },
+                { color: 'white', opacity: 0.8, weight: 6 },
+                { color: 'blue', opacity: 0.5, weight: 2 }
+            ]
+        }
+    }).addTo(map);
+
+    // Sự kiện khi tuyến đường được tìm thấy
+    currentRoute.on('routesfound', function () {
+        Swal.fire({
+            icon: 'success',
+            title: 'Thành công!',
+            text: 'Tuyến đường đã được tính toán!',
+        });
+    });
+
+    // Sự kiện khi không tìm thấy tuyến đường
+    currentRoute.on('routingerror', function (e) {
+        console.error('Routing error:', e);
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi!',
+            text: 'Không thể tính toán tuyến đường. Vui lòng thử lại.',
+        });
+    });
+}
+
+// Kiểm tra tọa độ hợp lệ
+function isValidCoordinates(lat, lng) {
+    return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+}
+
+// Chức năng chỉ đường từ hai điểm do người dùng chọn
+function showRouteFromTwoPoints() {
+    if (startMarker) {
+        map.removeLayer(startMarker);
+    }
+    if (endMarker) {
+        map.removeLayer(endMarker);
+    }
+
+    // Bước 1: Chọn điểm bắt đầu
+    enablePointSelection((startLat, startLng) => {
+        startMarker = L.marker([startLat, startLng], {
+            icon: userIcon
+        }).addTo(map).bindPopup("Điểm bắt đầu").openPopup();
+
+        // Bước 2: Chọn điểm kết thúc
+        enablePointSelection((endLat, endLng) => {
+            endMarker = L.marker([endLat, endLng], {
+                icon: userIcon
+            }).addTo(map).bindPopup("Điểm kết thúc").openPopup();
+
+            // Tính toán tuyến đường từ hai điểm
+            calculateRouteFromPoints(startLat, startLng, endLat, endLng);
+        });
+
+        Swal.fire({
+            icon: 'info',
+            title: 'Chọn điểm kết thúc',
+            text: 'Nhấp vào một vị trí trên bản đồ để chọn điểm kết thúc.',
+        });
+    });
+
+    Swal.fire({
+        icon: 'info',
+        title: 'Chọn điểm bắt đầu',
+        text: 'Nhấp vào một vị trí trên bản đồ để chọn điểm bắt đầu.',
+    });
+}
+
+// Thêm nút chỉ đường từ hai điểm vào giao diện
+const routeFromTwoPointsButton = document.createElement('button');
+routeFromTwoPointsButton.innerText = "Chỉ đường từ hai điểm";
+routeFromTwoPointsButton.style.margin = "10px";
+routeFromTwoPointsButton.style.padding = "10px";
+routeFromTwoPointsButton.style.cursor = "pointer";
+routeFromTwoPointsButton.style.border = "none";
+routeFromTwoPointsButton.style.backgroundColor = "#007bff";
+routeFromTwoPointsButton.style.color = "white";
+routeFromTwoPointsButton.style.borderRadius = "5px";
+
+// Sự kiện nhấn nút
+routeFromTwoPointsButton.addEventListener('click', showRouteFromTwoPoints);
+
+
+// Hàm thêm sự kiện cho nút chỉ đường từ hai điểm
+function initializeRouteButton() {
+    const routeFromTwoPointsButton = document.getElementById('route-from-two-points-btn');
+
+    if (routeFromTwoPointsButton) {
+        routeFromTwoPointsButton.addEventListener('click', showRouteFromTwoPoints);
+    } else {
+        console.error('Nút chỉ đường từ hai điểm không tìm thấy trên giao diện.');
+    }
+}
+
+// Gọi hàm thêm sự kiện khi tài liệu được tải
+document.addEventListener('DOMContentLoaded', function() {
+    initializeRouteButton();
+});
+//===========================================================================================================
+//vẽ trên bản đồ=============================================================================================
 // Hàm lưu trữ dữ liệu GeoJSON vào LocalStorage
 function saveDrawnItems() {
     var data = drawnItems.toGeoJSON();
@@ -124,8 +281,8 @@ map.on(L.Draw.Event.DELETED, function() {
 document.addEventListener('DOMContentLoaded', function() {
     loadDrawnItems();
 });
-
-// Hàm lấy và hiển thị tất cả các studio từ backend
+//===========================================================================================================
+// Hàm lấy và hiển thị tất cả các studio từ backend==========================================================
 function loadStudios() {
     fetch('http://localhost:8080/api/studios') // URL API để lấy tất cả studio
         .then(response => {
@@ -149,7 +306,7 @@ function loadStudios() {
             });
         });
 }
-
+//===========================================================================================================
 // Hàm lấy danh sách tên studio và thêm vào combobox
 function populateFeatureFilter() {
     fetch('http://localhost:8080/api/studios/names') // Endpoint để lấy danh sách tên studio
@@ -279,10 +436,10 @@ window.onclick = function(event) {
     }
 }
 
-// Chức năng chỉ đường từ vị trí người dùng đến studio được chọn
+// Chức năng chỉ đường từ vị trí người dùng hoặc vị trí do người dùng chọn
 var routeButton = document.getElementById('route-button');
-if (routeButton) { // Kiểm tra tồn tại trước khi thêm sự kiện
-    routeButton.addEventListener('click', function() {
+if (routeButton) {
+    routeButton.addEventListener('click', function () {
         if (!selectedStudio) {
             Swal.fire({
                 icon: 'warning',
@@ -292,50 +449,138 @@ if (routeButton) { // Kiểm tra tồn tại trước khi thêm sự kiện
             return;
         }
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                var userLat = position.coords.latitude;
-                var userLng = position.coords.longitude;
+        function calculateRoute(startLat, startLng) {
+            // Xóa bất kỳ tuyến đường nào trước đó
+            if (currentRoute) {
+                map.removeControl(currentRoute);
+            }
 
-                // Xóa bất kỳ tuyến đường nào trước đó
-                if (currentRoute) {
-                    map.removeControl(currentRoute);
+            // Tạo tuyến đường mới
+            currentRoute = L.Routing.control({
+                waypoints: [
+                    L.latLng(startLat, startLng),
+                    L.latLng(selectedStudio.latitude, selectedStudio.longitude)
+                ],
+                routeWhileDragging: false,
+                geocoder: L.Control.Geocoder.nominatim(),
+                showAlternatives: true, // Hiển thị tất cả các tuyến đường khả dụng
+                altLineOptions: {
+                    styles: [
+                        { color: 'black', opacity: 0.15, weight: 9 },
+                        { color: 'white', opacity: 0.8, weight: 6 },
+                        { color: 'blue', opacity: 0.5, weight: 2 }
+                    ]
                 }
+            }).addTo(map);
 
-                // Tạo tuyến đường mới
-                currentRoute = L.Routing.control({
-                    waypoints: [
-                        L.latLng(userLat, userLng),
-                        L.latLng(selectedStudio.latitude, selectedStudio.longitude)
-                    ],
-                    routeWhileDragging: false,
-                    geocoder: L.Control.Geocoder.nominatim(),
-                    show: true
-                }).addTo(map);
+            // Đặt lại view để bao phủ tất cả các tuyến đường
+            currentRoute.on('routesfound', function (e) {
+                var routes = e.routes;
 
-                // Đặt lại view để bao phủ tuyến đường
-                currentRoute.on('routesfound', function(e) {
-                    var routes = e.routes;
-                    if (routes.length > 0) {
-                        map.fitBounds(routes[0].bounds);
+                // Hiển thị hộp thoại cho phép người dùng chọn tuyến đường
+                let routeOptions = routes.map((route, index) => {
+                    return `<option value="${index}">Tuyến ${index + 1} - ${route.summary.totalDistance / 1000} km, ${Math.round(route.summary.totalTime / 60)} phút</option>`;
+                }).join('');
+
+                Swal.fire({
+                    title: 'Chọn tuyến đường',
+                    html: `<select id="route-select" class="swal2-input">${routeOptions}</select>`,
+                    confirmButtonText: 'Chọn',
+                    preConfirm: () => {
+                        const selectedRouteIndex = document.getElementById('route-select').value;
+                        return parseInt(selectedRouteIndex);
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const selectedIndex = result.value;
+                        if (selectedIndex >= 0 && selectedIndex < routes.length) {
+                            map.fitBounds(routes[selectedIndex].bounds);
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Thành công!',
+                                text: `Đã chọn tuyến ${selectedIndex + 1}.`
+                            });
+                        }
                     }
                 });
-            }, function(error) {
+            });
+        }
+
+        // Thử lấy vị trí hiện tại
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                calculateRoute(position.coords.latitude, position.coords.longitude);
+            }, function (error) {
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Lỗi!',
-                    text: "Không thể lấy vị trí của bạn."
+                    icon: 'warning',
+                    title: 'Không thể lấy vị trí hiện tại!',
+                    text: "Hãy chọn một vị trí bắt đầu trên bản đồ.",
+                    showCancelButton: true,
+                    confirmButtonText: 'Chọn vị trí',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Kích hoạt chế độ chọn vị trí bắt đầu
+                        let startMarker;
+                        map.once('click', function (e) {
+                            const { lat, lng } = e.latlng;
+
+                            if (startMarker) {
+                                map.removeLayer(startMarker);
+                            }
+
+                            startMarker = L.marker([lat, lng], {
+                                icon: userIcon
+                            }).addTo(map).bindPopup("Vị trí bắt đầu của bạn").openPopup();
+
+                            calculateRoute(lat, lng);
+                        });
+
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Hướng dẫn!',
+                            text: 'Nhấp vào một vị trí trên bản đồ để chọn vị trí bắt đầu.'
+                        });
+                    }
                 });
             });
         } else {
             Swal.fire({
-                icon: 'error',
-                title: 'Lỗi!',
-                text: "Trình duyệt của bạn không hỗ trợ Geolocation."
+                icon: 'warning',
+                title: 'Không hỗ trợ Geolocation!',
+                text: "Hãy chọn một vị trí bắt đầu trên bản đồ.",
+                showCancelButton: true,
+                confirmButtonText: 'Chọn vị trí',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Kích hoạt chế độ chọn vị trí bắt đầu
+                    let startMarker;
+                    map.once('click', function (e) {
+                        const { lat, lng } = e.latlng;
+
+                        if (startMarker) {
+                            map.removeLayer(startMarker);
+                        }
+
+                        startMarker = L.marker([lat, lng], {
+                            icon: userIcon
+                        }).addTo(map).bindPopup("Vị trí bắt đầu của bạn").openPopup();
+
+                        calculateRoute(lat, lng);
+                    });
+
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Hướng dẫn!',
+                        text: 'Nhấp vào một vị trí trên bản đồ để chọn vị trí bắt đầu.'
+                    });
+                }
             });
         }
     });
 }
+
 
 // Hàm hiển thị form tìm kiếm gần tôi sử dụng SweetAlert2
 function showSearchNearbyForm() {
@@ -668,3 +913,5 @@ document.getElementById('top-rated-btn').addEventListener('click', function() {
 document.getElementById('add-studio-btn').addEventListener('click', function() {
     showAddStudioForm();
 });
+
+

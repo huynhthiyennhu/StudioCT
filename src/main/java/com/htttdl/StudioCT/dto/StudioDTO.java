@@ -1,5 +1,7 @@
 package com.htttdl.StudioCT.dto;
 
+import jakarta.persistence.Column;
+
 import java.util.List;
 
 public class StudioDTO {
@@ -9,11 +11,45 @@ public class StudioDTO {
     private double latitude;
     private double longitude;
     private String phone;
-    private String type;
+    private StudioTypeDTO studioType;
     private double rating;
     private List<ImageDTO> images;
+    private WardDTO ward;
+    private String thumbnail;
+    private StreetDTO street;
 
-    // Getters và Setters
+    public String getThumbnail() {
+        return thumbnail;
+    }
+
+    public void setThumbnail(String thumbnail) {
+        this.thumbnail = thumbnail;
+    }
+// Getters và Setters
+
+    public WardDTO getWard() {
+        return ward;
+    }
+
+    public void setWard(WardDTO ward) {
+        this.ward = ward;
+    }
+
+    public StreetDTO getStreet() {
+        return street;
+    }
+
+    public void setStreet(StreetDTO street) {
+        this.street = street;
+    }
+
+    public StudioTypeDTO getStudioType() {
+        return studioType;
+    }
+
+    public void setStudioType(StudioTypeDTO studioType) {
+        this.studioType = studioType;
+    }
 
     public Long getId() {
         return id;
@@ -63,13 +99,7 @@ public class StudioDTO {
         this.phone = phone;
     }
 
-    public String getType() {
-        return type;
-    }
 
-    public void setType(String type) {
-        this.type = type;
-    }
 
     public double getRating() {
         return rating;

@@ -25,9 +25,17 @@ public class Studio {
 
     @Column(nullable=false)
     private String phone;
+    @Column(nullable = false) // Thumbnail bắt buộc
+    private String thumbnail = "default.png"; // Giá trị mặc định
 
-    @Column(nullable=false)
-    private String type;
+
+    public String getThumbnail() {
+        return thumbnail;
+    }
+
+    public void setThumbnail(String thumbnail) {
+        this.thumbnail = thumbnail;
+    }
 
     @Column
     private double rating;
@@ -35,6 +43,32 @@ public class Studio {
     @OneToMany(mappedBy = "studio", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Image> images;
 
+    @ManyToOne
+    @JoinColumn(name = "studio_type_id", nullable = false)
+    private StudioType studioType;
+
+    @ManyToOne
+    @JoinColumn(name = "ward_id", nullable = false)
+    private Ward ward;
+
+    @ManyToOne
+    @JoinColumn(name = "street_id", nullable = true)
+    private Street street;
+    public Street getStreet() {
+        return street;
+    }
+
+    public void setStreet(Street street) {
+        this.street = street;
+    }
+
+    public Ward getWard() {
+        return ward;
+    }
+
+    public void setWard(Ward ward) {
+        this.ward = ward;
+    }
     // Getters and Setters
     public Long getId() {
         return id;
@@ -45,6 +79,14 @@ public class Studio {
     }
 
     // Các getter và setter khác
+
+    public StudioType getStudioType() {
+        return studioType;
+    }
+
+    public void setStudioType(StudioType studioType) {
+        this.studioType = studioType;
+    }
 
     public String getName() {
         return name;
@@ -76,14 +118,6 @@ public class Studio {
 
     public void setPhone(String phone) {
         this.phone = phone;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public double getRating() {
