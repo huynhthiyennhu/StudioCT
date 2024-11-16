@@ -489,7 +489,7 @@ async function showAddStudioForm(selectedLatLng) {
     ).join('');
   
     Swal.fire({
-        title: '<h4 class="text-primary mb-3">Thêm Studio Mới</h4>',
+        title: '<h5 class="text-primary mb-3">Thêm Studio Mới</h45',
         html: `
             <style>
                 .swal2-popup { width: 500px; padding: 20px; }
@@ -499,13 +499,20 @@ async function showAddStudioForm(selectedLatLng) {
                     border-radius: 0.25rem;
                     border: 1px solid #ced4da;
                     margin-bottom: 15px;
+                    font-size: 16px;
+                    
                 }
                 .swal2-html-container label {
                     display: block;
                     margin-bottom: 5px;
                     font-weight: 500;
                     text-align: left;
+                     font-size: 16px; 
+                
                 }
+                      .form-group {
+                margin-bottom: 20px; /* Khoảng cách giữa các nhóm form */
+            }
             </style>
             <div class="form-group">
                 <label for="studio-name" class="form-label">Tên Studio:</label>
@@ -525,7 +532,10 @@ async function showAddStudioForm(selectedLatLng) {
                 <label for="studio-address" class="form-label">Địa Chỉ:</label>
                 <input type="text" id="studio-address-input" class="form-control" value="${address}" required>
             </div>
-            <p class="text-muted"><b>Vị trí đã chọn:</b> Latitude: ${selectedLatLng.lat.toFixed(6)}, Longitude: ${selectedLatLng.lng.toFixed(6)}</p>
+           <p class="text-muted" style="text-align: left; font-size: 16px;">
+    <b>Vị trí đã chọn:</b> Vĩ độ: ${selectedLatLng.lat.toFixed(6)}, Kinh độ: ${selectedLatLng.lng.toFixed(6)}
+</p>
+
         `,
         showCancelButton: true,
         confirmButtonText: '<i class="fas fa-check"></i> Thêm Studio',
@@ -763,9 +773,8 @@ function createMarker(studio) {
     });
 }
 
-
 // Hàm hiển thị chi tiết studio trong modal
-function showStudioDetail(studioId) { 
+function showStudioDetail(studioId) {
     fetch(`http://localhost:8080/api/studios/${studioId}`) // Endpoint để lấy chi tiết studio
         .then(response => {
             if (!response.ok) {
@@ -776,17 +785,16 @@ function showStudioDetail(studioId) {
         .then(studio => {
             document.getElementById('studio-name').innerText = studio.name;
 
-
             // Hiển thị hình ảnh
             var imagesDiv = document.getElementById('studio-images');
             imagesDiv.innerHTML = '';
             if (studio.thumbnail) {
                 var thumbnailImage = document.createElement('img');
                 thumbnailImage.src = `http://localhost:8080/api/images/view/${studio.thumbnail}`;
-                thumbnailImage.alt = studio.name; // Đặt văn bản thay thế là tên studio
-                thumbnailImage.id = 'thumbnail-image'; // Gán ID cho ảnh để áp dụng CSS
-                imagesDiv.appendChild(thumbnailImage); // Thêm vào phần hiển thị ảnh
-            
+                thumbnailImage.alt = studio.name;
+                thumbnailImage.id = 'thumbnail-image';
+                imagesDiv.appendChild(thumbnailImage);
+
                 // Thêm sự kiện click vào thumbnail
                 thumbnailImage.addEventListener('click', function () {
                     fetch(`http://localhost:8080/api/images/studio/${studioId}`) // API để lấy danh sách ảnh
@@ -797,15 +805,9 @@ function showStudioDetail(studioId) {
                             return response.json();
                         })
                         .then(images => {
-                            // Kiểm tra nếu không có ảnh thì không thực hiện gì
-                            if (images.length === 0) {
-                                console.log('Không có ảnh nào liên quan đến studio này.');
-                                return; // Thoát khỏi sự kiện nếu không có ảnh
-                            }
-            
-                            // Xử lý hiển thị danh sách ảnh
+                            // Tạo modal để hiển thị ảnh
                             var modalImages = document.createElement('div');
-                            modalImages.id = 'modal-images'; // Gán ID để quản lý modal
+                            modalImages.id = 'modal-images';
                             modalImages.style.display = 'flex';
                             modalImages.style.flexWrap = 'wrap';
                             modalImages.style.justifyContent = 'center';
@@ -819,7 +821,8 @@ function showStudioDetail(studioId) {
                             modalImages.style.overflow = 'auto';
                             modalImages.style.zIndex = '1000';
                             modalImages.style.padding = '20px';
-            
+
+                            // Hiển thị danh sách ảnh
                             images.forEach(image => {
                                 var img = document.createElement('img');
                                 img.src = `http://localhost:8080/api/images/view/${image.imageUrl}`;
@@ -830,16 +833,34 @@ function showStudioDetail(studioId) {
                                 img.style.cursor = 'pointer';
                                 modalImages.appendChild(img);
                             });
-            
+
+                            // Thêm nút "+" để thêm ảnh vào cuối modal
+                            var addImageButton = document.createElement('div');
+                            addImageButton.innerHTML = '+';
+                            addImageButton.style.width = '50px';
+                            addImageButton.style.height = '50px';
+                            addImageButton.style.display = 'flex';
+                            addImageButton.style.justifyContent = 'center';
+                            addImageButton.style.alignItems = 'center';
+                            addImageButton.style.borderRadius = '50%';
+                            addImageButton.style.backgroundColor = '#007bff';
+                            addImageButton.style.color = '#fff';
+                            addImageButton.style.fontSize = '24px';
+                            addImageButton.style.cursor = 'pointer';
+                            addImageButton.style.marginTop = '20px';
+                            addImageButton.addEventListener('click', function () {
+                                showAddImageForm(studioId); // Gọi hàm để hiển thị form thêm ảnh
+                            });
+                            modalImages.appendChild(addImageButton);
+
                             // Đóng modal khi click bên ngoài
                             modalImages.addEventListener('click', function (event) {
                                 if (event.target === modalImages) {
                                     modalImages.remove(); // Xóa modal khỏi DOM
                                 }
                             });
-            
+
                             document.body.appendChild(modalImages); // Thêm modal vào body
-                            console.log('Modal displayed'); // Log để kiểm tra modal
                         })
                         .catch(error => {
                             console.error('Error fetching images:', error);
@@ -850,26 +871,26 @@ function showStudioDetail(studioId) {
                             });
                         });
                 });
-            }
-            
-             else {
+            } else {
                 console.log('Không có ảnh thumbnail.');
             }
 
             // Hiển thị tên loại studio
             const studioTypeName = studio.studioType?.name || 'Không xác định';
-            document.getElementById('studio-type').innerHTML = `<strong>Loại:</strong> ${studioTypeName}`;
+            document.getElementById('studio-type').innerHTML = `<strong>Loại studio:</strong> ${studioTypeName}`;
+
             // Địa chỉ in đậm
             document.getElementById('studio-address').innerHTML = `<strong>Địa chỉ:</strong> ${studio.address}`;
 
             // Số điện thoại
             document.getElementById('studio-phone').innerHTML = `<strong>Số điện thoại:</strong> ${studio.phone}`;
+
             // Đánh giá in đậm
             const ratingDiv = document.getElementById('studio-rating');
             if (studio.rating === 0) {
                 ratingDiv.innerHTML = `<strong>Đánh giá:</strong> Chưa có đánh giá`;
             } else {
-                ratingDiv.innerHTML = `<strong>Đánh giá:</strong>  ${studio.rating}⭐`;
+                ratingDiv.innerHTML = `<strong>Đánh giá:</strong> ${studio.rating}⭐`;
             }
 
             // Hiển thị modal
@@ -885,6 +906,67 @@ function showStudioDetail(studioId) {
             });
         });
 }
+
+// Hàm hiển thị form thêm ảnh
+function showAddImageForm(studioId) {
+    Swal.fire({
+        title: 'Thêm ảnh mới',
+        html: `
+            <input type="file" id="image-upload" accept="image/*" class="swal2-input" multiple>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Thêm',
+        preConfirm: () => {
+            const fileInput = document.getElementById('image-upload');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                Swal.showValidationMessage('Vui lòng chọn ít nhất một tệp hình ảnh.');
+                return false;
+            }
+            return Array.from(fileInput.files); // Trả về danh sách tệp ảnh
+        }
+    }).then(result => {
+        if (result.isConfirmed) {
+            const files = result.value;
+
+            // Gửi các file lên server
+            const formData = new FormData();
+            files.forEach(file => {
+                formData.append('files', file); // Key "files" khớp với API backend
+            });
+
+            fetch(`http://localhost:8080/api/images/studio/${studioId}`, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Không thể thêm ảnh.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công!',
+                        text: 'Ảnh đã được thêm thành công.'
+                    });
+
+                    // Refresh danh sách ảnh
+                    document.querySelector('#modal-images').remove();
+                    document.getElementById('thumbnail-image').click(); // Nhấn lại vào thumbnail để làm mới modal
+                })
+                .catch(error => {
+                    console.error('Error uploading images:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi!',
+                        text: 'Không thể thêm ảnh.'
+                    });
+                });
+        }
+    });
+}
+
 
 // Đóng modal khi nhấp vào nút đóng
 var closeButton = document.querySelector('.close-button');
