@@ -42,19 +42,22 @@ L.control.layers(baseLayers, overlays, {
 
 // Định nghĩa các style cho các đối tượng
 var pointStyle = L.icon({
-    iconUrl: "./assets/images/icon2.jpg", // Đường dẫn chính xác tới icon của bạn
-    shadowUrl: "path_to_your_icon/marker-shadow.png",
+    iconUrl: "./assets/images/icon1.png", // Đường dẫn chính xác tới icon của bạn
+    shadowUrl: "./styles/css/images/marker-shadow.png",
     iconAnchor: [13, 41]
 });
 var lineStyle = { color: "blue", weight: 2 };
 var polygonStyle = { color: "red", fillColor: "yellow", weight: 4 };
-loadStudios();
+
+
 var userIcon = L.icon({
     iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64572.png', 
     iconSize: [25, 25],
     iconAnchor: [12, 25],
     popupAnchor: [0, -25]
 });
+
+
 //chỉ đường tự chọn==========================================================================================
 // Biến lưu trữ hai điểm được chọn
 let startMarker = null;
@@ -280,9 +283,42 @@ var drawControl = new L.Control.Draw({
 });
 map.addControl(drawControl);
 // Tạo nút tùy chỉnh cho chỉ đường và thêm vào thanh công cụ
-L.easyButton(`fa-road`, function(){
-    showRouteFromTwoPoints(); 
-}, 'Chỉ đường').addTo(map);
+// Nút Chỉ đường từ hai điểm
+L.easyButton(
+    `<i class="fa fa-arrows" aria-hidden="true"></i>`,
+    function () {
+        showRouteFromTwoPoints(); // Gọi hàm chỉ đường
+    },
+    'Chỉ đường từ hai điểm' // Tooltip
+).addTo(map);
+
+// Nút Tìm Studio Gần Tôi
+L.easyButton(
+    `<i class="fa fa-map-marker-alt" aria-hidden="true"></i>`,
+    function () {
+        showSearchNearbyForm(); // Gọi hàm tìm studio gần tôi
+    },
+    'Tìm Studio Gần Tôi' // Tooltip
+).addTo(map);
+
+// Nút Studio Đánh Giá Cao Nhất
+L.easyButton(
+    `<i class="fa fa-star" aria-hidden="true"></i>`,
+    function () {
+        showTopRatedForm(); // Gọi hàm tìm studio đánh giá cao nhất
+    },
+    'Studio Đánh Giá Cao Nhất' // Tooltip
+).addTo(map);
+
+// Nút Thêm Studio Mới
+L.easyButton(
+    `<i class="fa fa-plus-circle" aria-hidden="true"></i>`,
+    function () {
+        enableAddStudioMode(); // Gọi hàm thêm studio mới
+    },
+    'Thêm Studio Mới' // Tooltip
+).addTo(map);
+
 // Sự kiện khi một hình dạng mới được vẽ
 map.on(L.Draw.Event.CREATED, function(event) {
     var layer = event.layer;
@@ -347,6 +383,10 @@ function loadStudios() {
             });
         });
 }
+// Khi trang được tải, lấy danh sách tất cả các studio và thêm vào bản đồ
+document.addEventListener('DOMContentLoaded', function() {
+    loadStudios();
+});
 //===========================================================================================================
 //thêm studio mới===========================================================================================
 // Hàm lấy danh sách loại studio từ API
@@ -534,10 +574,6 @@ async function showAddStudioForm(selectedLatLng) {
         }
     });
 }
-
-
-
-// Nút kích hoạt chế độ chọn vị trí
 document.getElementById('add-studio-btn').addEventListener('click', enableAddStudioMode);
 
 //===========================================================================================================
@@ -573,11 +609,79 @@ function showCoordinatesAndAddressPopup(e) {
 // Thêm sự kiện click vào bản đồ để hiển thị tọa độ và địa chỉ
 map.on('click', showCoordinatesAndAddressPopup);
 //==========================================================================================================
+// Hàm hiển thị form studio đánh giá cao nhất sử dụng SweetAlert2
+function showTopRatedForm() {
+    Swal.fire({
+        title: 'Studio Đánh Giá Cao Nhất',
+        html: `
+            <label for="top-rated-limit">Số lượng:</label>
+            <input type="number" id="top-rated-limit" class="swal2-input" min="1" value="10">
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Hiển Thị',
+        preConfirm: () => {
+            const limit = Swal.getPopup().querySelector('#top-rated-limit').value;
+            if (!limit || limit <= 0) {
+                Swal.showValidationMessage(`Vui lòng nhập số lượng studio hợp lệ.`);
+            }
+            return { limit: parseInt(limit, 10) }; // Chuyển thành số nguyên
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const limit = result.value.limit;
+            fetchTopRatedStudios(limit);
+        }
+    });
+}
 
+// Hàm tách riêng để lấy danh sách studio đánh giá cao
+function fetchTopRatedStudios(rating) {
+    fetch(`http://localhost:8080/api/studios/filter-by-rating?rating=${rating}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Không thể lấy danh sách studio đánh giá cao.');
+            }
+            return response.json();
+        })
+        .then(data => {
+            updateMapWithStudios(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi!',
+                text: 'Không thể lấy danh sách studio đánh giá cao.'
+            });
+        });
+}
 
+// Hàm cập nhật bản đồ với danh sách studio
+function updateMapWithStudios(studios) {
+    // Xóa các layer cũ
+    studioLayerGroup.clearLayers();
+    clickLocationLayer.clearLayers();
+    nearbyFeaturesLayer.clearLayers();
 
+    // Thêm marker mới cho các studio
+    studios.forEach(studio => {
+        createMarker(studio);
+    });
 
+    if (studios.length > 0) {
+        // Đặt lại view tập trung vào các studio mới
+        const bounds = L.latLngBounds(studios.map(studio => [studio.latitude, studio.longitude]));
+        map.fitBounds(bounds);
+    } else {
+        Swal.fire({
+            icon: 'info',
+            title: 'Thông Báo!',
+            text: 'Không có studio nào được tìm thấy.'
+        });
+    }
+}
 
+//===========================================================================================================
 // Hàm lấy danh sách tên studio và thêm vào combobox
 // function populateFeatureFilter() {
 //     fetch('http://localhost:8080/api/studios/names')
@@ -627,8 +731,6 @@ function createMarker(studio) {
         showStudioDetail(studio.id);
         selectedStudio = studio;
     });
-
-    // console.log(`Marker cho studio ${studio.name} đã được thêm vào bản đồ.`);
 }
 
 
@@ -937,66 +1039,6 @@ function showSearchNearbyForm() {
     });
 }
 
-// Hàm hiển thị form studio đánh giá cao nhất sử dụng SweetAlert2
-function showTopRatedForm() {
-    Swal.fire({
-        title: 'Studio Đánh Giá Cao Nhất',
-        html: `
-            <label for="top-rated-limit">Số lượng:</label>
-            <input type="number" id="top-rated-limit" class="swal2-input" min="1" value="10">
-        `,
-        showCancelButton: true,
-        confirmButtonText: 'Hiển Thị',
-        preConfirm: () => {
-            const limit = Swal.getPopup().querySelector('#top-rated-limit').value;
-            if (!limit) {
-                Swal.showValidationMessage(`Vui lòng nhập số lượng studio.`);
-            }
-            return { limit: limit };
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            var limit = result.value.limit;
-            if (limit) {
-                fetch(`http://localhost:8080/api/studios/top-rated?limit=${limit}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Không thể lấy danh sách studio đánh giá cao.');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // Xóa các layer cũ
-                        studioLayerGroup.clearLayers();
-                        clickLocationLayer.clearLayers();
-                        nearbyFeaturesLayer.clearLayers();
-
-                        // Thêm marker mới cho các studio đánh giá cao
-                        data.forEach(studio => {
-                            createMarker(studio);
-                        });
-
-                        // Đặt lại view về vị trí Cần Thơ
-                        map.setView([10.0452, 105.7469], 13);
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Lỗi!',
-                            text: 'Không thể lấy danh sách studio đánh giá cao.'
-                        });
-                    });
-            } else {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Cảnh báo!',
-                    text: 'Vui lòng nhập số lượng.'
-                });
-            }
-        }
-    });
-}
 
 
 
@@ -1033,19 +1075,15 @@ function findFeaturesWithinDistance(latlng, distance) {
         });
 }
 
-// Khi trang được tải, lấy danh sách tất cả các studio và thêm vào bản đồ
-document.addEventListener('DOMContentLoaded', function() {
-    populateFeatureFilter();
-    loadStudios();
-});
+
 
 // Sự kiện khi thay đổi combobox lọc đối tượng
 document.getElementById('feature-filter').addEventListener('change', function() {
     var selectedValue = this.value;
-    var url = 'http://localhost:8080/api/studios'; // Endpoint mặc định
+    var url = 'http://localhost:8080/api/studios'; 
 
     if (selectedValue !== 'all') {
-        url += `/filter?name=${encodeURIComponent(selectedValue)}`; // Endpoint để lọc theo tên
+        url += `/filter?name=${encodeURIComponent(selectedValue)}`; 
     }
 
     fetch(url)
@@ -1071,17 +1109,40 @@ document.getElementById('feature-filter').addEventListener('change', function() 
         });
 });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Sự kiện khi click vào các nút chức năng
-document.getElementById('search-nearby-btn').addEventListener('click', function() {
+document.getElementById('search-nearby-btn').addEventListener('click', function (e) {
+    e.preventDefault();
     showSearchNearbyForm();
 });
 
-document.getElementById('top-rated-btn').addEventListener('click', function() {
+document.getElementById('top-rated-btn').addEventListener('click', function (e) {
+    e.preventDefault();
     showTopRatedForm();
 });
 
-document.getElementById('add-studio-btn').addEventListener('click', function() {
-    showAddStudioForm();
+document.getElementById('add-studio-btn').addEventListener('click', function (e) {
+    e.preventDefault();
+    enableAddStudioMode();
 });
+
+document.getElementById('filter-btn').addEventListener('click', function (e) {
+    e.preventDefault();
+    Swal.fire('Lọc Studio', 'Chức năng lọc studio sẽ được thực hiện tại đây.', 'info');
+});
+
+
 
 

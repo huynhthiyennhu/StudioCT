@@ -148,3 +148,27 @@ body, html {
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
 }
 
+.custom-toolbar a {
+    display: block;
+    margin: 5px;
+    width: 36px;
+    height: 36px;
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    line-height: 36px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.custom-toolbar a:hover {
+    background: #f4f4f4;
+}
+
+.custom-toolbar img {
+    width: 24px;
+    height: 24px;
+    display: block;
+    margin: auto;
+}
