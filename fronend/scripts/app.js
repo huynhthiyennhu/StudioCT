@@ -56,26 +56,15 @@ var userIcon = L.icon({
     popupAnchor: [0, -25]
 });
 
-<<<<<<< HEAD
-// Tính năng lấy vị trí hiện tại
-=======
-// Lấy vị trí hiện tại khi tải trang
->>>>>>> 0bc573bb6602739118a1f7ceaa4df790325b711d
 map.locate({ setView: true, maxZoom: 16 });
 
 map.on('locationfound', function(e) {
     // Thêm marker tại vị trí hiện tại
     L.marker(e.latlng, { icon: userIcon }).addTo(map)
-        .bindPopup(`Vị trí của bạn: <br>Latitude: ${e.latlng.lat.toFixed(6)}<br>Longitude: ${e.latlng.lng.toFixed(6)}`)
+        .bindPopup(`Vị trí của bạn: <br>Vĩ độ: ${e.latlng.lat.toFixed(6)}<br>Kinh độ: ${e.latlng.lng.toFixed(6)}`)
         .openPopup();
-<<<<<<< HEAD
 
-});
-
-map.on('locationerror', function(e) {
-    alert("Không thể lấy vị trí hiện tại. Lý do: " + e.message + "\nVui lòng kiểm tra lại quyền truy cập vị trí trong trình duyệt của bạn.");
-=======
-    console.log(`Vị trí hiện tại: Latitude ${e.latlng.lat}, Longitude ${e.latlng.lng}`);
+    console.log(`Vị trí hiện tại: Vĩ độ ${e.latlng.lat}, Kinh độ ${e.latlng.lng}`);
 });
 
 map.on('locationerror', function(e) {
@@ -84,7 +73,7 @@ map.on('locationerror', function(e) {
 
     // Tùy chọn: Đưa bản đồ về vị trí mặc định
     map.setView([10.0292, 105.7673], 16); // Quay lại tọa độ Cần Thơ
->>>>>>> 0bc573bb6602739118a1f7ceaa4df790325b711d
+
 });
 
 //chỉ đường tự chọn==========================================================================================
@@ -536,7 +525,7 @@ async function showAddStudioForm(selectedLatLng) {
                 <label for="studio-address" class="form-label">Địa Chỉ:</label>
                 <input type="text" id="studio-address-input" class="form-control" value="${address}" required>
             </div>
-            <p class="text-muted"><b>Vị trí đã chọn:</b> Latitude: ${selectedLatLng.lat.toFixed(6)}, Longitude: ${selectedLatLng.lng.toFixed(6)}</p>
+            <p class="text-muted"><b>Vị trí đã chọn:</b> vĩ độ: ${selectedLatLng.lat.toFixed(6)}, kinh độ : ${selectedLatLng.lng.toFixed(6)}</p>
         `,
         showCancelButton: true,
         confirmButtonText: '<i class="fas fa-check"></i> Thêm Studio',
@@ -624,7 +613,7 @@ function showCoordinatesAndAddressPopup(e) {
     var lng = e.latlng.lng.toFixed(6);
 
     // Tạo nội dung popup ban đầu với tọa độ
-    var popupContent = `<b>Tọa độ đã chọn:</b><br>Latitude: ${lat}<br>Longitude: ${lng}<br>Đang lấy địa chỉ...`;
+    var popupContent = `<b>Tọa độ đã chọn:</b><br>Vĩ độ: ${lat}<br>Kinh độ: ${lng}<br>Đang lấy địa chỉ...`;
     var popup = L.popup()
         .setLatLng(e.latlng)
         .setContent(popupContent)
@@ -638,7 +627,7 @@ function showCoordinatesAndAddressPopup(e) {
                 // Cập nhật nội dung popup với địa chỉ
                 popup.setContent(`<b>Tọa độ:</b><br>Vĩ độ: ${lat}<br>Kinh độ: ${lng}<br><b>Địa chỉ:</b> ${data.display_name}`);
             } else {
-                popup.setContent(`<b>Tọa độ đã chọn:</b><br>Latitude: ${lat}<br>Longitude: ${lng}<br>Không tìm thấy địa chỉ.`);
+                popup.setContent(`<b>Tọa độ đã chọn:</b><br>Vĩ độ: ${lat}<br>Kinh độ: ${lng}<br>Không tìm thấy địa chỉ.`);
             }
         })
         .catch(error => {
@@ -723,40 +712,6 @@ function updateMapWithStudios(studios) {
 }
 
 //===========================================================================================================
-// Hàm lấy danh sách tên studio và thêm vào combobox
-// function populateFeatureFilter() {
-//     fetch('http://localhost:8080/api/studios/names')
-//         .then(response => {
-//             if (!response.ok) {
-//                 throw new Error('Không thể lấy danh sách lọc.');
-//             }
-//             return response.json();
-//         })
-//         .then(data => {
-//             var filter = document.getElementById('feature-filter');
-//             // Thêm tùy chọn "Tất cả"
-//             var allOption = document.createElement('option');
-//             allOption.value = 'all';
-//             allOption.text = 'Tất cả';
-//             filter.add(allOption);
-
-//             data.forEach(name => {
-//                 var option = document.createElement('option');
-//                 option.value = name;
-//                 option.text = name;
-//                 filter.add(option);
-//             });
-//         })
-//         .catch(error => {
-//             console.error('Error loading feature filter:', error);
-//             Swal.fire({
-//                 icon: 'error',
-//                 title: 'Lỗi!',
-//                 text: 'Không thể tải danh sách lọc.'
-//             });
-//         });
-// }
-
 // Hàm tạo marker và thêm vào layerGroup
 function createMarker(studio) {
     if (!studio.latitude || !studio.longitude) {
@@ -1055,7 +1010,7 @@ if (routeButton) {
     });
 }
 
-
+//=====================================================================================================================
 // Hàm hiển thị form tìm kiếm gần tôi sử dụng SweetAlert2
 var clickLocationLayer = L.layerGroup().addTo(map);
 
@@ -1177,57 +1132,6 @@ function findFeaturesWithinDistance(latlng, distance) {
             });
         });
 }
-
-
-// Sự kiện khi thay đổi combobox lọc đối tượng
-// document.getElementById('feature-filter').addEventListener('change', function() {
-//     var selectedValue = this.value;
-//     var url = 'http://localhost:8080/api/studios'; 
-
-//     if (selectedValue !== 'all') {
-//         url += `/filter?name=${encodeURIComponent(selectedValue)}`; 
-//     }
-
-//     fetch(url)
-//         .then(response => {
-//             if (!response.ok) {
-//                 throw new Error('Không thể tải dữ liệu đã lọc.');
-//             }
-//             return response.json();
-//         })
-//         .then(data => {
-//             studioLayerGroup.clearLayers(); // Xóa các layer cũ
-//             data.forEach(studio => {
-//                 createMarker(studio);
-//             });
-//         })
-//         .catch(error => {
-//             console.error('Error loading filtered data:', error);
-//             Swal.fire({
-//                 icon: 'error',
-//                 title: 'Lỗi!',
-//                 text: 'Không thể tải dữ liệu đã lọc.'
-//             });
-//         });
-// });
-
-
-// Sự kiện khi click vào các nút chức năng
-// document.getElementById('search-nearby-btn').addEventListener('click', function (e) {
-//     e.preventDefault();
-//     showSearchNearbyForm();
-// });
-
-// document.getElementById('top-rated-btn').addEventListener('click', function (e) {
-//     e.preventDefault();
-//     showTopRatedForm();
-// });
-
-
-// document.getElementById('filter-btn').addEventListener('click', function (e) {
-//     e.preventDefault();
-//     Swal.fire('Lọc Studio', 'Chức năng lọc studio sẽ được thực hiện tại đây.', 'info');
-// });
 
 
 //====================================tính khoảng cách===============================================================
@@ -1415,3 +1319,75 @@ L.easyButton(
     exportToGeoJSON,
     "Xuất GeoJSON"
 ).addTo(map);
+//=======================Thêm từ file json==============================================================================
+// Tạo nút "Nạp JSON" trên thanh công cụ
+L.easyButton(
+    `<i class="fa fa-upload"></i>`, // Biểu tượng của nút (FontAwesome)
+    () => {
+        // Kích hoạt input file để chọn tệp JSON
+        document.getElementById('jsonFileInput').click();
+    },
+    "Nạp dữ liệu từ JSON" // Tooltip khi di chuột
+).addTo(map);
+// Xử lý sự kiện khi người dùng chọn tệp JSON
+document.getElementById('jsonFileInput').addEventListener('change', function (event) {
+    const file = event.target.files[0]; // Lấy tệp được chọn
+
+    if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            try {
+                const geojsonData = JSON.parse(e.target.result); // Parse nội dung JSON
+                loadGeoJsonData(geojsonData); // Gọi hàm để hiển thị dữ liệu
+            } catch (error) {
+                console.error('Lỗi khi đọc tệp JSON:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi!',
+                    text: 'Không thể đọc tệp JSON. Định dạng không hợp lệ.',
+                });
+            }
+        };
+
+        reader.readAsText(file); // Đọc nội dung tệp
+    }
+});
+
+// Hàm hiển thị dữ liệu GeoJSON lên bản đồ
+// Hàm hiển thị dữ liệu GeoJSON lên bản đồ
+function loadGeoJsonData(geojsonData) {
+    try {
+        // Xóa các layer cũ
+        drawnItems.clearLayers();
+
+        // Thêm dữ liệu GeoJSON vào layer
+        L.geoJSON(geojsonData, {
+            onEachFeature: function (feature, layer) {
+                if (feature.properties) {
+                    layer.bindPopup(
+                        `<pre>${JSON.stringify(feature.properties, null, 2)}</pre>`
+                    );
+                }
+                drawnItems.addLayer(layer); // Thêm vào nhóm hình vẽ
+            },
+        });
+
+        // Đặt bản đồ focus vào dữ liệu được nạp
+        map.fitBounds(drawnItems.getBounds());
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Thành công!',
+            text: 'Dữ liệu từ tệp JSON đã được nạp lên bản đồ.',
+        });
+    } catch (error) {
+        console.error('Lỗi khi hiển thị dữ liệu GeoJSON:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi!',
+            text: 'Không thể hiển thị dữ liệu từ tệp JSON.',
+        });
+    }
+}
+
