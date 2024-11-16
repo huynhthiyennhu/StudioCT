@@ -1,12 +1,46 @@
 // Khởi tạo bản đồ tại tọa độ Cần Thơ
-var map = L.map('map').setView([10.0292, 105.7673], 16);
+var map = L.map('map', {
+    center: [10.0292, 105.7673],
+    zoom: 16
+});
 
-// Thêm tile layer từ OpenStreetMap
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+// Định nghĩa các lớp cơ sở (base layers)
+var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
+});
+
+var satelliteLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+    attribution: 'Tiles courtesy of <a href="https://hot.openstreetmap.org/" target="_blank">HOT</a>'
+});
+
+// Thêm lớp OpenStreetMap làm lớp mặc định
+osmLayer.addTo(map);
+
+// Định nghĩa các lớp phủ (overlay layers)
+var studioLayerGroup = L.layerGroup();
+var drawnItems = new L.FeatureGroup();
+
+// Thêm các lớp phủ vào bản đồ
+studioLayerGroup.addTo(map);
+drawnItems.addTo(map);
+
+// Điều khiển lớp (base layers & overlays)
+var baseLayers = {
+    "Bản đồ OSM": osmLayer,
+    "Bản đồ vệ tinh": satelliteLayer
+};
+
+var overlays = {
+    "Các studio": studioLayerGroup,
+    "Hình vẽ": drawnItems
+};
+
+// Thêm điều khiển vào bản đồ
+L.control.layers(baseLayers, overlays, {
+    collapsed: false // Hiển thị điều khiển không bị thu gọn
 }).addTo(map);
-loadStudios();
-// Định nghĩa các style cho point, line và polygon
+
+// Định nghĩa các style cho các đối tượng
 var pointStyle = L.icon({
     iconUrl: "./assets/images/icon2.jpg", // Đường dẫn chính xác tới icon của bạn
     shadowUrl: "path_to_your_icon/marker-shadow.png",
@@ -14,14 +48,7 @@ var pointStyle = L.icon({
 });
 var lineStyle = { color: "blue", weight: 2 };
 var polygonStyle = { color: "red", fillColor: "yellow", weight: 4 };
-
-// LayerGroup để chứa các đối tượng studio
-var studioLayerGroup = L.layerGroup().addTo(map);
-
-// Khởi tạo FeatureGroup cho các đối tượng đã vẽ
-var drawnItems = new L.FeatureGroup();
-map.addLayer(drawnItems);
-
+loadStudios();
 var userIcon = L.icon({
     iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64572.png', 
     iconSize: [25, 25],
@@ -110,42 +137,52 @@ function isValidCoordinates(lat, lng) {
 
 // Chức năng chỉ đường từ hai điểm do người dùng chọn
 function showRouteFromTwoPoints() {
+    // Xóa điểm đánh dấu và tuyến đường trước đó nếu có
     if (startMarker) {
         map.removeLayer(startMarker);
+        startMarker = null;
     }
     if (endMarker) {
         map.removeLayer(endMarker);
+        endMarker = null;
+    }
+    if (currentRoute) {
+        map.removeControl(currentRoute);
+        currentRoute = null;
     }
 
-    // Bước 1: Chọn điểm bắt đầu
-    enablePointSelection((startLat, startLng) => {
-        startMarker = L.marker([startLat, startLng], {
-            icon: userIcon
-        }).addTo(map).bindPopup("Điểm bắt đầu").openPopup();
-
-        // Bước 2: Chọn điểm kết thúc
-        enablePointSelection((endLat, endLng) => {
-            endMarker = L.marker([endLat, endLng], {
-                icon: userIcon
-            }).addTo(map).bindPopup("Điểm kết thúc").openPopup();
-
-            // Tính toán tuyến đường từ hai điểm
-            calculateRouteFromPoints(startLat, startLng, endLat, endLng);
-        });
-
-        Swal.fire({
-            icon: 'info',
-            title: 'Chọn điểm kết thúc',
-            text: 'Nhấp vào một vị trí trên bản đồ để chọn điểm kết thúc.',
-        });
-    });
-
+    // Hiển thị thông báo và hướng dẫn người dùng
     Swal.fire({
         icon: 'info',
         title: 'Chọn điểm bắt đầu',
-        text: 'Nhấp vào một vị trí trên bản đồ để chọn điểm bắt đầu.',
+        text: 'Nhấp vào một vị trí trên bản đồ để chọn điểm bắt đầu.'
+    }).then(() => {
+        // Bước 1: Chọn điểm bắt đầu
+        enablePointSelection((startLat, startLng) => {
+            startMarker = L.marker([startLat, startLng], {
+                icon: userIcon
+            }).addTo(map).bindPopup("Điểm bắt đầu").openPopup();
+
+            // Hiển thị thông báo cho bước tiếp theo
+            Swal.fire({
+                icon: 'info',
+                title: 'Chọn điểm kết thúc',
+                text: 'Nhấp vào một vị trí trên bản đồ để chọn điểm kết thúc.'
+            }).then(() => {
+                // Bước 2: Chọn điểm kết thúc
+                enablePointSelection((endLat, endLng) => {
+                    endMarker = L.marker([endLat, endLng], {
+                        icon: userIcon
+                    }).addTo(map).bindPopup("Điểm kết thúc").openPopup();
+
+                    // Tính toán tuyến đường từ hai điểm
+                    calculateRouteFromPoints(startLat, startLng, endLat, endLng);
+                });
+            });
+        });
     });
 }
+
 
 // Thêm nút chỉ đường từ hai điểm vào giao diện
 const routeFromTwoPointsButton = document.createElement('button');
@@ -163,20 +200,20 @@ routeFromTwoPointsButton.addEventListener('click', showRouteFromTwoPoints);
 
 
 // Hàm thêm sự kiện cho nút chỉ đường từ hai điểm
-function initializeRouteButton() {
-    const routeFromTwoPointsButton = document.getElementById('route-from-two-points-btn');
+// function initializeRouteButton() {
+//     const routeFromTwoPointsButton = document.getElementById('route-from-two-points-btn');
 
-    if (routeFromTwoPointsButton) {
-        routeFromTwoPointsButton.addEventListener('click', showRouteFromTwoPoints);
-    } else {
-        console.error('Nút chỉ đường từ hai điểm không tìm thấy trên giao diện.');
-    }
-}
+//     if (routeFromTwoPointsButton) {
+//         routeFromTwoPointsButton.addEventListener('click', showRouteFromTwoPoints);
+//     } else {
+//         console.error('Nút chỉ đường từ hai điểm không tìm thấy trên giao diện.');
+//     }
+// }
 
 // Gọi hàm thêm sự kiện khi tài liệu được tải
-document.addEventListener('DOMContentLoaded', function() {
-    initializeRouteButton();
-});
+// document.addEventListener('DOMContentLoaded', function() {
+//     initializeRouteButton();
+// });
 //===========================================================================================================
 //vẽ trên bản đồ=============================================================================================
 // Hàm lưu trữ dữ liệu GeoJSON vào LocalStorage
@@ -242,7 +279,10 @@ var drawControl = new L.Control.Draw({
     }
 });
 map.addControl(drawControl);
-
+// Tạo nút tùy chỉnh cho chỉ đường và thêm vào thanh công cụ
+L.easyButton(`fa-road`, function(){
+    showRouteFromTwoPoints(); 
+}, 'Chỉ đường').addTo(map);
 // Sự kiện khi một hình dạng mới được vẽ
 map.on(L.Draw.Event.CREATED, function(event) {
     var layer = event.layer;
@@ -501,7 +541,6 @@ async function showAddStudioForm(selectedLatLng) {
 document.getElementById('add-studio-btn').addEventListener('click', enableAddStudioMode);
 
 //===========================================================================================================
-// Hàm để hiển thị popup với tọa độ
 // Hàm để hiển thị popup với tọa độ và địa chỉ
 function showCoordinatesAndAddressPopup(e) {
     var lat = e.latlng.lat.toFixed(6);
@@ -540,38 +579,38 @@ map.on('click', showCoordinatesAndAddressPopup);
 
 
 // Hàm lấy danh sách tên studio và thêm vào combobox
-function populateFeatureFilter() {
-    fetch('http://localhost:8080/api/studios/names') // Endpoint để lấy danh sách tên studio
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Không thể lấy danh sách lọc.');
-            }
-            return response.json();
-        })
-        .then(data => {
-            var filter = document.getElementById('feature-filter');
-            // Thêm tùy chọn "Tất cả"
-            var allOption = document.createElement('option');
-            allOption.value = 'all';
-            allOption.text = 'Tất cả';
-            filter.add(allOption);
+// function populateFeatureFilter() {
+//     fetch('http://localhost:8080/api/studios/names')
+//         .then(response => {
+//             if (!response.ok) {
+//                 throw new Error('Không thể lấy danh sách lọc.');
+//             }
+//             return response.json();
+//         })
+//         .then(data => {
+//             var filter = document.getElementById('feature-filter');
+//             // Thêm tùy chọn "Tất cả"
+//             var allOption = document.createElement('option');
+//             allOption.value = 'all';
+//             allOption.text = 'Tất cả';
+//             filter.add(allOption);
 
-            data.forEach(name => {
-                var option = document.createElement('option');
-                option.value = name;
-                option.text = name;
-                filter.add(option);
-            });
-        })
-        .catch(error => {
-            console.error('Error loading feature filter:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Lỗi!',
-                text: 'Không thể tải danh sách lọc.'
-            });
-        });
-}
+//             data.forEach(name => {
+//                 var option = document.createElement('option');
+//                 option.value = name;
+//                 option.text = name;
+//                 filter.add(option);
+//             });
+//         })
+//         .catch(error => {
+//             console.error('Error loading feature filter:', error);
+//             Swal.fire({
+//                 icon: 'error',
+//                 title: 'Lỗi!',
+//                 text: 'Không thể tải danh sách lọc.'
+//             });
+//         });
+// }
 
 // Hàm tạo marker và thêm vào layerGroup
 function createMarker(studio) {
@@ -589,7 +628,7 @@ function createMarker(studio) {
         selectedStudio = studio;
     });
 
-    console.log(`Marker cho studio ${studio.name} đã được thêm vào bản đồ.`);
+    // console.log(`Marker cho studio ${studio.name} đã được thêm vào bản đồ.`);
 }
 
 
