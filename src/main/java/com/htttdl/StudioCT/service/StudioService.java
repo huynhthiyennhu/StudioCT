@@ -19,21 +19,7 @@ public class StudioService {
     @Autowired
     private StudioTypeRepository studioTypeRepository;
 
-    @Autowired
-    private WardRepository wardRepository;
-    @Autowired
-    private DistrictRepository districtRepository;
 
-    // Lấy tất cả các quận
-    public List<District> getAllDistricts() {
-        return districtRepository.findAll();
-    }
-
-    // Lấy thông tin quận theo ID
-    public District getDistrictById(Long id) {
-        return districtRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("District not found with id: " + id));
-    }
 
     public List<Studio> getAllStudios() {
         return studioRepository.findAll();
@@ -47,18 +33,6 @@ public class StudioService {
     }
 
     public Studio createStudio(Studio studio) {
-        if (studio.getWard() != null && studio.getWard().getId() != null) {
-            Ward ward = wardRepository.findById(studio.getWard().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Ward not found with id: " + studio.getWard().getId()));
-            studio.setWard(ward);
-
-            // Kiểm tra và lấy District từ Ward (nếu cần)
-            if (ward.getDistrict() != null) {
-                District district = districtRepository.findById(ward.getDistrict().getId())
-                        .orElseThrow(() -> new ResourceNotFoundException("District not found with id: " + ward.getDistrict().getId()));
-                ward.setDistrict(district);
-            }
-        }
 
         return studioRepository.save(studio);
     }
@@ -77,18 +51,6 @@ public class StudioService {
             StudioType studioType = studioTypeRepository.findById(studioDetails.getStudioType().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("StudioType not found with id: " + studioDetails.getStudioType().getId()));
             studio.setStudioType(studioType);
-        }
-        if (studioDetails.getWard() != null && studioDetails.getWard().getId() != null) {
-            Ward ward = wardRepository.findById(studioDetails.getWard().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Ward not found with id: " + studioDetails.getWard().getId()));
-            studio.setWard(ward);
-
-            // Kiểm tra và lấy District từ Ward (nếu cần)
-            if (ward.getDistrict() != null) {
-                District district = districtRepository.findById(ward.getDistrict().getId())
-                        .orElseThrow(() -> new ResourceNotFoundException("District not found with id: " + ward.getDistrict().getId()));
-                ward.setDistrict(district);
-            }
         }
 
 
@@ -146,15 +108,6 @@ public class StudioService {
         if (name != null && !name.isEmpty()) {
             studios = studios.stream()
                     .filter(studio -> studio.getName().toLowerCase().contains(name.toLowerCase()))
-                    .collect(Collectors.toList());
-        }
-
-        // Lọc theo quận (nếu có)
-        if (districtId != null) {
-            studios = studios.stream()
-                    .filter(studio -> studio.getWard() != null &&
-                            studio.getWard().getDistrict() != null &&
-                            studio.getWard().getDistrict().getId().equals(districtId))
                     .collect(Collectors.toList());
         }
 

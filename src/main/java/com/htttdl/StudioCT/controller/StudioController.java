@@ -3,11 +3,9 @@ package com.htttdl.StudioCT.controller;
 import com.htttdl.StudioCT.dto.*;
 import com.htttdl.StudioCT.model.Studio;
 import com.htttdl.StudioCT.model.StudioType;
-import com.htttdl.StudioCT.model.Ward;
 import com.htttdl.StudioCT.repository.StudioRepository;
 import com.htttdl.StudioCT.exception.ResourceNotFoundException;
 import com.htttdl.StudioCT.repository.StudioTypeRepository;
-import com.htttdl.StudioCT.repository.WardRepository;
 import com.htttdl.StudioCT.service.StudioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -30,8 +28,6 @@ public class StudioController {
     private StudioTypeRepository studioTypeRepository;
 
 
-    @Autowired
-    private WardRepository wardRepository;
     // API hiển thị tất cả các studio
     @GetMapping
     public ResponseEntity<List<StudioDTO>> getAllStudios() {
@@ -87,14 +83,7 @@ public class StudioController {
         } else {
             throw new IllegalArgumentException("Address is required");
         }
-        // Xử lý Ward
-        if (studioDTO.getWard() != null && studioDTO.getWard().getId() != null) {
-            Ward ward = wardRepository.findById(studioDTO.getWard().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Ward not found with id: " + studioDTO.getWard().getId()));
-            studio.setWard(ward);
-        } else {
-            throw new IllegalArgumentException("Ward is required");
-        }
+
 
 
 
@@ -122,12 +111,6 @@ public class StudioController {
         studio.setPhone(studioDTO.getPhone());
         studio.setRating(studioDTO.getRating());
         studio.setAddress(studioDTO.getAddress());
-        // Cập nhật Ward
-        if (studioDTO.getWard() != null && studioDTO.getWard().getId() != null) {
-            Ward ward = wardRepository.findById(studioDTO.getWard().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Ward not found with id: " + studioDTO.getWard().getId()));
-            studio.setWard(ward);
-        }
 
 
 
@@ -211,22 +194,7 @@ public class StudioController {
             dto.setStudioType(studioTypeDTO);
         }
 
-        // Chuyển đổi Ward và District
-        if (studio.getWard() != null) {
-            WardDTO wardDTO = new WardDTO();
-            wardDTO.setId(studio.getWard().getId());
-            wardDTO.setName(studio.getWard().getName());
 
-            // Bao gồm thông tin District trong Ward
-            if (studio.getWard().getDistrict() != null) {
-                DistrictDTO districtDTO = new DistrictDTO();
-                districtDTO.setId(studio.getWard().getDistrict().getId());
-                districtDTO.setName(studio.getWard().getDistrict().getName());
-                wardDTO.setDistrict(districtDTO);
-            }
-
-            dto.setWard(wardDTO);
-        }
 
 
 
@@ -242,20 +210,6 @@ public class StudioController {
         }
 
         return dto;
-    }
-    @GetMapping("/district/{districtId}")
-    public ResponseEntity<List<StudioDTO>> getStudiosByDistrict(@PathVariable Long districtId) {
-        List<Studio> studios = studioRepository.findAll().stream()
-                .filter(studio -> studio.getWard() != null &&
-                        studio.getWard().getDistrict() != null &&
-                        studio.getWard().getDistrict().getId().equals(districtId))
-                .collect(Collectors.toList());
-
-        List<StudioDTO> studioDTOs = studios.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(studioDTOs);
     }
 
 
