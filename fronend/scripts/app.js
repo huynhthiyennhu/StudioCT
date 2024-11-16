@@ -56,7 +56,11 @@ var userIcon = L.icon({
     popupAnchor: [0, -25]
 });
 
+<<<<<<< HEAD
+// Tính năng lấy vị trí hiện tại
+=======
 // Lấy vị trí hiện tại khi tải trang
+>>>>>>> 0bc573bb6602739118a1f7ceaa4df790325b711d
 map.locate({ setView: true, maxZoom: 16 });
 
 map.on('locationfound', function(e) {
@@ -64,6 +68,13 @@ map.on('locationfound', function(e) {
     L.marker(e.latlng, { icon: userIcon }).addTo(map)
         .bindPopup(`Vị trí của bạn: <br>Latitude: ${e.latlng.lat.toFixed(6)}<br>Longitude: ${e.latlng.lng.toFixed(6)}`)
         .openPopup();
+<<<<<<< HEAD
+
+});
+
+map.on('locationerror', function(e) {
+    alert("Không thể lấy vị trí hiện tại. Lý do: " + e.message + "\nVui lòng kiểm tra lại quyền truy cập vị trí trong trình duyệt của bạn.");
+=======
     console.log(`Vị trí hiện tại: Latitude ${e.latlng.lat}, Longitude ${e.latlng.lng}`);
 });
 
@@ -73,6 +84,7 @@ map.on('locationerror', function(e) {
 
     // Tùy chọn: Đưa bản đồ về vị trí mặc định
     map.setView([10.0292, 105.7673], 16); // Quay lại tọa độ Cần Thơ
+>>>>>>> 0bc573bb6602739118a1f7ceaa4df790325b711d
 });
 
 //chỉ đường tự chọn==========================================================================================
@@ -252,7 +264,7 @@ function loadDrawnItems() {
                 drawnItems.addLayer(layer);
             }
         });
-        map.fitBounds(drawnItems.getBounds());
+        // map.fitBounds(drawnItems.getBounds());
         console.log("Đã tải dữ liệu hình vẽ từ LocalStorage.");
     }
 }
@@ -336,20 +348,29 @@ L.easyButton(
     'Thêm Studio Mới' // Tooltip
 ).addTo(map);
 
+
 // Sự kiện khi một hình dạng mới được vẽ
-map.on(L.Draw.Event.CREATED, function(event) {
-    var layer = event.layer;
+map.on(L.Draw.Event.CREATED, function (event) {
+    const layer = event.layer;
     drawnItems.addLayer(layer);
 
-    // Cập nhật LocalStorage mỗi khi một hình mới được vẽ
-    saveDrawnItems();
+    if (layer.toGeoJSON) {
+        const geoJsonFeature = layer.toGeoJSON();
+        if (geoJsonFeature.geometry.type === "Polygon" || geoJsonFeature.geometry.type === "MultiPolygon") {
+            const area = calculateArea(geoJsonFeature);
 
-    Swal.fire({
-        title: 'Hình dạng đã được vẽ',
-        text: 'Đã thêm một đối tượng mới vào bản đồ.',
-        icon: 'success'
-    });
+            Swal.fire({
+                icon: 'info',
+                title: 'Diện tích',
+                text: `Diện tích của hình vẽ là: ${area.toFixed(2)} km².`,
+            });
+        }
+    }
+
+    // Cập nhật LocalStorage
+    saveDrawnItems();
 });
+
 
 // Sự kiện khi một đối tượng được chỉnh sửa
 map.on(L.Draw.Event.EDITED, function(event) {
@@ -634,8 +655,8 @@ function showTopRatedForm() {
     Swal.fire({
         title: 'Studio Đánh Giá Cao Nhất',
         html: `
-            <label for="top-rated-limit">Số lượng:</label>
-            <input type="number" id="top-rated-limit" class="swal2-input" min="1" value="10">
+            <label for="top-rated-limit">Đánh giá từ:</label>
+            <input type="number" id="top-rated-limit" class="swal2-input" min="1" value="5" max="5">
         `,
         showCancelButton: true,
         confirmButtonText: 'Hiển Thị',
@@ -846,7 +867,7 @@ function showStudioDetail(studioId) {
                 console.log('Không có ảnh thumbnail.');
             }
 
-            
+  
             // Địa chỉ in đậm
             document.getElementById('studio-address').innerHTML = `<strong>Địa chỉ:</strong> ${studio.address}`;
 
@@ -855,6 +876,7 @@ function showStudioDetail(studioId) {
 
             // Đánh giá in đậm
             document.getElementById('studio-rating').innerHTML = `<strong>Đánh giá:</strong> ${studio.rating}`;
+
 
             // Hiển thị modal
             var modal = document.getElementById('studio-detail');
@@ -1035,6 +1057,8 @@ if (routeButton) {
 
 
 // Hàm hiển thị form tìm kiếm gần tôi sử dụng SweetAlert2
+var clickLocationLayer = L.layerGroup().addTo(map);
+
 function showSearchNearbyForm() {
     Swal.fire({
         title: 'Tìm Studio Gần Tôi',
@@ -1060,7 +1084,7 @@ function showSearchNearbyForm() {
                     navigator.geolocation.getCurrentPosition(function(position) {
                         var userLat = position.coords.latitude;
                         var userLng = position.coords.longitude;
-
+                        console.log(radius);
                         fetch(`http://localhost:8080/api/studios/nearby?latitude=${userLat}&longitude=${userLng}&radius=${radius}`)
                             .then(response => {
                                 if (!response.ok) {
@@ -1071,8 +1095,8 @@ function showSearchNearbyForm() {
                             .then(data => {
                                 // Xóa các layer cũ
                                 clickLocationLayer.clearLayers();
-                                nearbyFeaturesLayer.clearLayers();
-
+                                // nearbyFeaturesLayer.clearLayers();
+                               
                                 // Thêm marker cho vị trí người dùng
                                 var userMarker = L.marker([userLat, userLng], {icon: userIcon}).addTo(clickLocationLayer);
                                 userMarker.bindPopup("Vị trí của bạn").openPopup();
@@ -1206,6 +1230,40 @@ function findFeaturesWithinDistance(latlng, distance) {
 // });
 
 
+//====================================tính khoảng cách===============================================================
+L.easyButton(
+    `<i class="fa fa-ruler-horizontal" aria-hidden="true"></i>`,
+    function () {
+        enableDistanceMeasurement();
+    },
+    'Tính khoảng cách giữa hai điểm'
+).addTo(map);
+// L.easyButton(
+//     `<i class="fa fa-times-circle" aria-hidden="true"></i>`,
+//     function () {
+//         clearDistanceMarkers(); // Gọi hàm xóa các điểm
+//     },
+//     'Xóa các điểm đã chọn'
+// ).addTo(map);
+let point1 = null;
+let point2 = null;
+let distanceMarkers = []; // Lưu trữ các marker đã thêm
+
+
+// Hàm tính khoảng cách giữa hai điểm (Haversine Formula)
+function calculateDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371; // Bán kính Trái Đất (km)
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLng = (lng2 - lng1) * (Math.PI / 180);
+    const a = 
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Tính khoảng cách (km)
+    return distance;
+}
 
 document.getElementById("searchBox").addEventListener("input", function (e) {
     const searchTerm = e.target.value.trim(); // Lấy từ khóa tìm kiếm
@@ -1217,3 +1275,143 @@ document.getElementById("searchBox").addEventListener("input", function (e) {
     }
 });
 
+
+// Hàm xóa các điểm đã chọn
+function clearDistanceMarkers() {
+    distanceMarkers.forEach(marker => map.removeLayer(marker)); // Xóa tất cả marker
+    distanceMarkers = []; // Xóa mảng marker
+    point1 = null;
+    point2 = null;
+
+    Swal.fire({
+        icon: 'info',
+        title: 'Điểm đã chọn đã bị xóa',
+        text: 'Bạn đã xóa các điểm tính khoảng cách.',
+    });
+}
+
+// Hàm tắt chế độ tính khoảng cách
+function disableDistanceCalculation() {
+    map.off('click'); // Hủy sự kiện click
+    clearDistanceMarkers(); // Xóa các điểm đã chọn
+    Swal.fire({
+        icon: 'info',
+        title: 'Tính khoảng cách đã bị tắt',
+        text: 'Các điểm đã chọn cũng đã bị xóa.',
+    });
+}
+
+// Hàm bật chế độ tính khoảng cách
+function enableDistanceMeasurement() {
+    Swal.fire({
+        icon: 'info',
+        title: 'Chọn điểm đầu tiên',
+        text: 'Nhấp vào bản đồ để chọn điểm đầu tiên.'
+    }).then(() => {
+        map.once('click', function (e) {
+            point1 = e.latlng;
+
+            const marker1 = L.marker([point1.lat, point1.lng])
+                .addTo(map)
+                .bindPopup("Điểm đầu tiên").openPopup();
+
+            distanceMarkers.push(marker1); // Lưu lại marker
+
+            Swal.fire({
+                icon: 'info',
+                title: 'Chọn điểm thứ hai',
+                text: 'Nhấp vào bản đồ để chọn điểm thứ hai.'
+            }).then(() => {
+                map.once('click', function (e) {
+                    point2 = e.latlng;
+
+                    const marker2 = L.marker([point2.lat, point2.lng])
+                        .addTo(map)
+                        .bindPopup("Điểm thứ hai").openPopup();
+
+                    distanceMarkers.push(marker2); // Lưu lại marker
+
+                    // Tính khoảng cách giữa hai điểm
+                    const distance = calculateDistance(point1.lat, point1.lng, point2.lat, point2.lng);
+
+                    // Hiển thị kết quả
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Khoảng cách',
+                        text: `Khoảng cách giữa hai điểm là: ${distance.toFixed(2)} km.`,
+                    }).then(() => {
+                        clearDistanceMarkers(); // Xóa các điểm sau khi hiển thị
+                    });
+                });
+            });
+        });
+    });
+}
+
+//======================================================================================================================
+
+//=========================Tính diện tích===============================================================================
+// Hàm tính diện tích cho hình vẽ (polygon hoặc multipolygon)
+function calculateArea(geoJsonFeature) {
+    const area = turf.area(geoJsonFeature); // Diện tích tính bằng mét vuông
+    const areaInKm2 = area / 1_000_00; // Chuyển đổi sang km²
+    return areaInKm2;
+}
+
+// Thêm sự kiện click vào các layer để tính diện tích
+drawnItems.on('click', function (e) {
+    const layer = e.layer;
+    if (layer.toGeoJSON) {
+        const geoJsonFeature = layer.toGeoJSON();
+        if (geoJsonFeature.geometry.type === "Polygon" || geoJsonFeature.geometry.type === "MultiPolygon") {
+            const area = calculateArea(geoJsonFeature);
+
+            Swal.fire({
+                icon: 'info',
+                title: 'Diện tích',
+                text: `Diện tích của hình vẽ là: ${area.toFixed(2)} km².`,
+            });
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Không phải là hình đa giác',
+                text: 'Chỉ có thể tính diện tích cho hình đa giác.',
+            });
+        }
+    }
+});
+//==================================================================================================================
+//=================================tải xuống dữ liệu GeoJSON từ các hình vẽ trên bản đồ.============================
+// Hàm xuất dữ liệu GeoJSON
+function exportToGeoJSON() {
+    // Lấy dữ liệu từ các hình đã vẽ
+    const data = drawnItems.toGeoJSON();
+
+    // Chuyển dữ liệu sang định dạng JSON
+    const json = JSON.stringify(data);
+
+    // Tạo một file và tải xuống
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    // Tạo liên kết để tải file
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "shapes.geojson";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    Swal.fire({
+        icon: "success",
+        title: "Xuất GeoJSON thành công!",
+        text: "File GeoJSON đã được tải xuống.",
+    });
+}
+
+// Thêm nút xuất GeoJSON vào thanh công cụ
+L.easyButton(
+    `<i class="fa fa-download" aria-hidden="true"></i>`,
+    exportToGeoJSON,
+    "Xuất GeoJSON"
+).addTo(map);

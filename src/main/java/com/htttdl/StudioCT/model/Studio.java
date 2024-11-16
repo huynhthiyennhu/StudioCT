@@ -47,19 +47,9 @@ public class Studio {
     @JoinColumn(name = "studio_type_id", nullable = false)
     private StudioType studioType;
 
-    @ManyToOne
-    @JoinColumn(name = "ward_id", nullable = false)
-    private Ward ward;
 
 
 
-    public Ward getWard() {
-        return ward;
-    }
-
-    public void setWard(Ward ward) {
-        this.ward = ward;
-    }
     // Getters and Setters
     public Long getId() {
         return id;

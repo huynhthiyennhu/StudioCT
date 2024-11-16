@@ -14,7 +14,7 @@ public class StudioDTO {
     private StudioTypeDTO studioType;
     private double rating;
     private List<ImageDTO> images;
-    private WardDTO ward;
+
     private String thumbnail;
 
     public String getThumbnail() {
@@ -26,15 +26,6 @@ public class StudioDTO {
     }
 // Getters và Setters
 
-    public WardDTO getWard() {
-        return ward;
-    }
-
-    public void setWard(WardDTO ward) {
-        this.ward = ward;
-    }
-
-   
 
     public StudioTypeDTO getStudioType() {
         return studioType;
