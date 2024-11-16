@@ -1,7 +1,7 @@
-// Khởi tạo bản đồ tại tọa độ Cần Thơ
 var map = L.map('map', {
-    center: [10.0292, 105.7673],
-    zoom: 16
+    center: [10.0292, 105.7673], // Tọa độ mặc định (Cần Thơ)
+    zoom: 18, // Tăng mức zoom mặc định lên lớn hơn
+    zoomControl: true // Hiển thị điều khiển zoom
 });
 
 // Định nghĩa các lớp cơ sở (base layers)
@@ -49,14 +49,31 @@ var pointStyle = L.icon({
 var lineStyle = { color: "blue", weight: 2 };
 var polygonStyle = { color: "red", fillColor: "yellow", weight: 4 };
 
-
 var userIcon = L.icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64572.png', 
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64572.png',
     iconSize: [25, 25],
     iconAnchor: [12, 25],
     popupAnchor: [0, -25]
 });
 
+// Lấy vị trí hiện tại khi tải trang
+map.locate({ setView: true, maxZoom: 16 });
+
+map.on('locationfound', function(e) {
+    // Thêm marker tại vị trí hiện tại
+    L.marker(e.latlng, { icon: userIcon }).addTo(map)
+        .bindPopup(`Vị trí của bạn: <br>Latitude: ${e.latlng.lat.toFixed(6)}<br>Longitude: ${e.latlng.lng.toFixed(6)}`)
+        .openPopup();
+    console.log(`Vị trí hiện tại: Latitude ${e.latlng.lat}, Longitude ${e.latlng.lng}`);
+});
+
+map.on('locationerror', function(e) {
+    // Xử lý lỗi khi không lấy được vị trí
+    alert("Không thể lấy vị trí hiện tại. Lý do: " + e.message + "\nVui lòng kiểm tra lại quyền truy cập vị trí trong trình duyệt của bạn.");
+
+    // Tùy chọn: Đưa bản đồ về vị trí mặc định
+    map.setView([10.0292, 105.7673], 16); // Quay lại tọa độ Cần Thơ
+});
 
 //chỉ đường tự chọn==========================================================================================
 // Biến lưu trữ hai điểm được chọn
@@ -360,8 +377,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 //===========================================================================================================
 // Hàm lấy và hiển thị tất cả các studio từ backend==========================================================
-function loadStudios() {
-    fetch('http://localhost:8080/api/studios') // URL API để lấy tất cả studio
+function loadStudios(filterName = "") {
+    // URL API có điều kiện lọc
+    const apiUrl = `http://localhost:8080/api/studios/filter?name=${encodeURIComponent(filterName)}`;
+
+    fetch(apiUrl) // Gửi yêu cầu đến API
         .then(response => {
             if (!response.ok) {
                 throw new Error('Không thể lấy danh sách studio.');
@@ -369,20 +389,25 @@ function loadStudios() {
             return response.json();
         })
         .then(data => {
-            studioLayerGroup.clearLayers(); // Xóa các layer cũ nếu có
+            studioLayerGroup.clearLayers(); // Xóa các marker cũ nếu có
+
+            // Hiển thị danh sách studio trên bản đồ
             data.forEach(studio => {
                 createMarker(studio);
             });
+
+            console.log("Kết quả hiển thị studio:", data); // Kiểm tra kết quả từ API
         })
         .catch(error => {
             console.error('Error loading studios:', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Lỗi!',
-                text: 'Không thể tải danh sách studio.'
+                text: 'Không thể tải danh sách studio.',
             });
         });
 }
+
 // Khi trang được tải, lấy danh sách tất cả các studio và thêm vào bản đồ
 document.addEventListener('DOMContentLoaded', function() {
     loadStudios();
@@ -655,8 +680,8 @@ function fetchTopRatedStudios(rating) {
 function updateMapWithStudios(studios) {
     // Xóa các layer cũ
     studioLayerGroup.clearLayers();
-    clickLocationLayer.clearLayers();
-    nearbyFeaturesLayer.clearLayers();
+    // clickLocationLayer.clearLayers();
+    // nearbyFeaturesLayer.clearLayers();
 
     // Thêm marker mới cho các studio
     studios.forEach(studio => {
@@ -730,7 +755,7 @@ function createMarker(studio) {
 
 
 // Hàm hiển thị chi tiết studio trong modal
-function showStudioDetail(studioId) {
+function showStudioDetail(studioId) { 
     fetch(`http://localhost:8080/api/studios/${studioId}`) // Endpoint để lấy chi tiết studio
         .then(response => {
             if (!response.ok) {
@@ -740,38 +765,96 @@ function showStudioDetail(studioId) {
         })
         .then(studio => {
             document.getElementById('studio-name').innerText = studio.name;
-            document.getElementById('studio-address').innerText = `Địa chỉ: ${studio.address}`;
-            document.getElementById('studio-phone').innerText = `Số điện thoại: ${studio.phone}`;
-            document.getElementById('studio-rating').innerText = `Đánh giá: ${studio.rating}`;
+
 
             // Hiển thị hình ảnh
             var imagesDiv = document.getElementById('studio-images');
             imagesDiv.innerHTML = '';
-            if (studio.images && studio.images.length > 0) {
-                studio.images.forEach(image => {
-                    var img = document.createElement('img');
-                    img.src = image.imageUrl;
-                    img.alt = studio.name;
-                    img.style.width = '100px';
-                    img.style.margin = '5px';
-                    imagesDiv.appendChild(img);
+            if (studio.thumbnail) {
+                var thumbnailImage = document.createElement('img');
+                thumbnailImage.src = `http://localhost:8080/api/images/view/${studio.thumbnail}`;
+                thumbnailImage.alt = studio.name; // Đặt văn bản thay thế là tên studio
+                thumbnailImage.id = 'thumbnail-image'; // Gán ID cho ảnh để áp dụng CSS
+                imagesDiv.appendChild(thumbnailImage); // Thêm vào phần hiển thị ảnh
+            
+                // Thêm sự kiện click vào thumbnail
+                thumbnailImage.addEventListener('click', function () {
+                    fetch(`http://localhost:8080/api/images/studio/${studioId}`) // API để lấy danh sách ảnh
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Không thể lấy danh sách ảnh.');
+                            }
+                            return response.json();
+                        })
+                        .then(images => {
+                            // Kiểm tra nếu không có ảnh thì không thực hiện gì
+                            if (images.length === 0) {
+                                console.log('Không có ảnh nào liên quan đến studio này.');
+                                return; // Thoát khỏi sự kiện nếu không có ảnh
+                            }
+            
+                            // Xử lý hiển thị danh sách ảnh
+                            var modalImages = document.createElement('div');
+                            modalImages.id = 'modal-images'; // Gán ID để quản lý modal
+                            modalImages.style.display = 'flex';
+                            modalImages.style.flexWrap = 'wrap';
+                            modalImages.style.justifyContent = 'center';
+                            modalImages.style.alignItems = 'center';
+                            modalImages.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                            modalImages.style.position = 'fixed';
+                            modalImages.style.top = '0';
+                            modalImages.style.left = '0';
+                            modalImages.style.width = '100%';
+                            modalImages.style.height = '100%';
+                            modalImages.style.overflow = 'auto';
+                            modalImages.style.zIndex = '1000';
+                            modalImages.style.padding = '20px';
+            
+                            images.forEach(image => {
+                                var img = document.createElement('img');
+                                img.src = `http://localhost:8080/api/images/view/${image.imageUrl}`;
+                                img.alt = studio.name;
+                                img.style.width = '200px';
+                                img.style.margin = '10px';
+                                img.style.borderRadius = '8px';
+                                img.style.cursor = 'pointer';
+                                modalImages.appendChild(img);
+                            });
+            
+                            // Đóng modal khi click bên ngoài
+                            modalImages.addEventListener('click', function (event) {
+                                if (event.target === modalImages) {
+                                    modalImages.remove(); // Xóa modal khỏi DOM
+                                }
+                            });
+            
+                            document.body.appendChild(modalImages); // Thêm modal vào body
+                            console.log('Modal displayed'); // Log để kiểm tra modal
+                        })
+                        .catch(error => {
+                            console.error('Error fetching images:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Lỗi!',
+                                text: 'Không thể lấy danh sách ảnh.'
+                            });
+                        });
                 });
-            } else {
-                imagesDiv.innerHTML = '<p>Không có hình ảnh.</p>';
+            }
+            
+             else {
+                console.log('Không có ảnh thumbnail.');
             }
 
-            // Hiển thị đánh giá
-            var reviewsDiv = document.getElementById('studio-reviews');
-            reviewsDiv.innerHTML = '';
-            if (studio.reviews && studio.reviews.length > 0) {
-                studio.reviews.forEach(review => {
-                    var reviewP = document.createElement('p');
-                    reviewP.innerHTML = `<strong>${review.rating} sao:</strong> ${review.comment}`;
-                    reviewsDiv.appendChild(reviewP);
-                });
-            } else {
-                reviewsDiv.innerHTML = '<p>Không có đánh giá.</p>';
-            }
+            
+            // Địa chỉ in đậm
+            document.getElementById('studio-address').innerHTML = `<strong>Địa chỉ:</strong> ${studio.address}`;
+
+            // Số điện thoại
+            document.getElementById('studio-phone').innerHTML = `<strong>Số điện thoại:</strong> ${studio.phone}`;
+
+            // Đánh giá in đậm
+            document.getElementById('studio-rating').innerHTML = `<strong>Đánh giá:</strong> ${studio.rating}`;
 
             // Hiển thị modal
             var modal = document.getElementById('studio-detail');
@@ -847,7 +930,8 @@ if (routeButton) {
 
                 // Hiển thị hộp thoại cho phép người dùng chọn tuyến đường
                 let routeOptions = routes.map((route, index) => {
-                    return `<option value="${index}">Tuyến ${index + 1} - ${route.summary.totalDistance / 1000} km, ${Math.round(route.summary.totalTime / 60)} phút</option>`;
+                    return `<option value="${index}">Tuyến ${index + 1} - ${(route.summary.totalDistance / 1000).toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km, ${Math.round(route.summary.totalTime / 60)} phút</option>`;
+
                 }).join('');
 
                 Swal.fire({
@@ -1123,4 +1207,13 @@ function findFeaturesWithinDistance(latlng, distance) {
 
 
 
+document.getElementById("searchBox").addEventListener("input", function (e) {
+    const searchTerm = e.target.value.trim(); // Lấy từ khóa tìm kiếm
+
+    if (searchTerm) {
+        loadStudios(searchTerm); // Gọi hàm loadStudios với từ khóa tìm kiếm
+    } else {
+        loadStudios(); // Nếu từ khóa rỗng, tải toàn bộ studio
+    }
+});
 
