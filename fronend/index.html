@@ -41,6 +41,8 @@
 
 
 
+    <link rel="icon" href="assets/images/favicon.png" type="image/x-icon" />
+
     <link rel="stylesheet" href="styles/styles.css" />
 
     <!-- jQuery -->
@@ -67,20 +69,38 @@
             <button id="add-studio-btn">Thêm Studio Mới</button>
         </div>
     </div> -->
+
     <!-- Popup chi tiết studio -->
     <div id="studio-detail" class="modal">
       <div class="modal-content">
         <span class="close-button">&times;</span>
+
         <h2 id="studio-name"></h2>
+        <div id="studio-images"></div>
         <p id="studio-address"></p>
+
         <p id="studio-phone"></p>
         <p id="studio-rating"></p>
-        <div id="studio-images"></div>
-        <h3>Đánh Giá</h3>
-        <div id="studio-reviews"></div>
-        <button id="route-button">Chỉ Đường Đến Studio</button>
+
+        <button id="route-button" class="btn-route">
+          Chỉ Đường Đến Studio
+        </button>
       </div>
     </div>
+    <input
+      type="text"
+      id="searchBox"
+      placeholder="Tìm kiếm studio..."
+      style="
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        padding: 5px;
+        width: 300px;
+      "
+    />
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -97,6 +117,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shp-write/0.3.3/shpwrite.min.js"></script>
 
     <!-- Tập tin JavaScript của ứng dụng -->
+    <!-- Tải Leaflet Control Search CSS và JS -->
+
     <script src="scripts/app.js"></script>
   </body>
 </html>
