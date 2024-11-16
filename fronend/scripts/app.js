@@ -56,6 +56,36 @@ var userIcon = L.icon({
     popupAnchor: [0, -25]
 });
 
+<<<<<<< HEAD
+// Tính năng lấy vị trí hiện tại
+=======
+// Lấy vị trí hiện tại khi tải trang
+>>>>>>> 0bc573bb6602739118a1f7ceaa4df790325b711d
+map.locate({ setView: true, maxZoom: 16 });
+
+map.on('locationfound', function(e) {
+    // Thêm marker tại vị trí hiện tại
+    L.marker(e.latlng, { icon: userIcon }).addTo(map)
+        .bindPopup(`Vị trí của bạn: <br>Latitude: ${e.latlng.lat.toFixed(6)}<br>Longitude: ${e.latlng.lng.toFixed(6)}`)
+        .openPopup();
+<<<<<<< HEAD
+
+});
+
+map.on('locationerror', function(e) {
+    alert("Không thể lấy vị trí hiện tại. Lý do: " + e.message + "\nVui lòng kiểm tra lại quyền truy cập vị trí trong trình duyệt của bạn.");
+=======
+    console.log(`Vị trí hiện tại: Latitude ${e.latlng.lat}, Longitude ${e.latlng.lng}`);
+});
+
+map.on('locationerror', function(e) {
+    // Xử lý lỗi khi không lấy được vị trí
+    alert("Không thể lấy vị trí hiện tại. Lý do: " + e.message + "\nVui lòng kiểm tra lại quyền truy cập vị trí trong trình duyệt của bạn.");
+
+    // Tùy chọn: Đưa bản đồ về vị trí mặc định
+    map.setView([10.0292, 105.7673], 16); // Quay lại tọa độ Cần Thơ
+>>>>>>> 0bc573bb6602739118a1f7ceaa4df790325b711d
+});
 
 //chỉ đường tự chọn==========================================================================================
 // Biến lưu trữ hai điểm được chọn
@@ -761,31 +791,92 @@ function showStudioDetail(studioId) {
             // Hiển thị hình ảnh
             var imagesDiv = document.getElementById('studio-images');
             imagesDiv.innerHTML = '';
-            if (studio.images && studio.images.length > 0) {
-                studio.images.forEach(image => {
-                    var img = document.createElement('img');
-                    img.src = image.imageUrl;
-                    img.alt = studio.name;
-                    img.style.width = '100px';
-                    img.style.margin = '5px';
-                    imagesDiv.appendChild(img);
+            if (studio.thumbnail) {
+                var thumbnailImage = document.createElement('img');
+                thumbnailImage.src = `http://localhost:8080/api/images/view/${studio.thumbnail}`;
+                thumbnailImage.alt = studio.name; // Đặt văn bản thay thế là tên studio
+                thumbnailImage.id = 'thumbnail-image'; // Gán ID cho ảnh để áp dụng CSS
+                imagesDiv.appendChild(thumbnailImage); // Thêm vào phần hiển thị ảnh
+            
+                // Thêm sự kiện click vào thumbnail
+                thumbnailImage.addEventListener('click', function () {
+                    fetch(`http://localhost:8080/api/images/studio/${studioId}`) // API để lấy danh sách ảnh
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Không thể lấy danh sách ảnh.');
+                            }
+                            return response.json();
+                        })
+                        .then(images => {
+                            // Kiểm tra nếu không có ảnh thì không thực hiện gì
+                            if (images.length === 0) {
+                                console.log('Không có ảnh nào liên quan đến studio này.');
+                                return; // Thoát khỏi sự kiện nếu không có ảnh
+                            }
+            
+                            // Xử lý hiển thị danh sách ảnh
+                            var modalImages = document.createElement('div');
+                            modalImages.id = 'modal-images'; // Gán ID để quản lý modal
+                            modalImages.style.display = 'flex';
+                            modalImages.style.flexWrap = 'wrap';
+                            modalImages.style.justifyContent = 'center';
+                            modalImages.style.alignItems = 'center';
+                            modalImages.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                            modalImages.style.position = 'fixed';
+                            modalImages.style.top = '0';
+                            modalImages.style.left = '0';
+                            modalImages.style.width = '100%';
+                            modalImages.style.height = '100%';
+                            modalImages.style.overflow = 'auto';
+                            modalImages.style.zIndex = '1000';
+                            modalImages.style.padding = '20px';
+            
+                            images.forEach(image => {
+                                var img = document.createElement('img');
+                                img.src = `http://localhost:8080/api/images/view/${image.imageUrl}`;
+                                img.alt = studio.name;
+                                img.style.width = '200px';
+                                img.style.margin = '10px';
+                                img.style.borderRadius = '8px';
+                                img.style.cursor = 'pointer';
+                                modalImages.appendChild(img);
+                            });
+            
+                            // Đóng modal khi click bên ngoài
+                            modalImages.addEventListener('click', function (event) {
+                                if (event.target === modalImages) {
+                                    modalImages.remove(); // Xóa modal khỏi DOM
+                                }
+                            });
+            
+                            document.body.appendChild(modalImages); // Thêm modal vào body
+                            console.log('Modal displayed'); // Log để kiểm tra modal
+                        })
+                        .catch(error => {
+                            console.error('Error fetching images:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Lỗi!',
+                                text: 'Không thể lấy danh sách ảnh.'
+                            });
+                        });
                 });
-            } else {
-                imagesDiv.innerHTML = '<p>Không có hình ảnh.</p>';
+            }
+            
+             else {
+                console.log('Không có ảnh thumbnail.');
             }
 
-            // Hiển thị đánh giá
-            var reviewsDiv = document.getElementById('studio-reviews');
-            reviewsDiv.innerHTML = '';
-            if (studio.reviews && studio.reviews.length > 0) {
-                studio.reviews.forEach(review => {
-                    var reviewP = document.createElement('p');
-                    reviewP.innerHTML = `<strong>${review.rating} sao:</strong> ${review.comment}`;
-                    reviewsDiv.appendChild(reviewP);
-                });
-            } else {
-                reviewsDiv.innerHTML = '<p>Không có đánh giá.</p>';
-            }
+  
+            // Địa chỉ in đậm
+            document.getElementById('studio-address').innerHTML = `<strong>Địa chỉ:</strong> ${studio.address}`;
+
+            // Số điện thoại
+            document.getElementById('studio-phone').innerHTML = `<strong>Số điện thoại:</strong> ${studio.phone}`;
+
+            // Đánh giá in đậm
+            document.getElementById('studio-rating').innerHTML = `<strong>Đánh giá:</strong> ${studio.rating}`;
+
 
             // Hiển thị modal
             var modal = document.getElementById('studio-detail');
@@ -1139,5 +1230,188 @@ function findFeaturesWithinDistance(latlng, distance) {
 // });
 
 
+//====================================tính khoảng cách===============================================================
+L.easyButton(
+    `<i class="fa fa-ruler-horizontal" aria-hidden="true"></i>`,
+    function () {
+        enableDistanceMeasurement();
+    },
+    'Tính khoảng cách giữa hai điểm'
+).addTo(map);
+// L.easyButton(
+//     `<i class="fa fa-times-circle" aria-hidden="true"></i>`,
+//     function () {
+//         clearDistanceMarkers(); // Gọi hàm xóa các điểm
+//     },
+//     'Xóa các điểm đã chọn'
+// ).addTo(map);
+let point1 = null;
+let point2 = null;
+let distanceMarkers = []; // Lưu trữ các marker đã thêm
 
 
+// Hàm tính khoảng cách giữa hai điểm (Haversine Formula)
+function calculateDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371; // Bán kính Trái Đất (km)
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLng = (lng2 - lng1) * (Math.PI / 180);
+    const a = 
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Tính khoảng cách (km)
+    return distance;
+}
+
+document.getElementById("searchBox").addEventListener("input", function (e) {
+    const searchTerm = e.target.value.trim(); // Lấy từ khóa tìm kiếm
+
+    if (searchTerm) {
+        loadStudios(searchTerm); // Gọi hàm loadStudios với từ khóa tìm kiếm
+    } else {
+        loadStudios(); // Nếu từ khóa rỗng, tải toàn bộ studio
+    }
+});
+
+
+// Hàm xóa các điểm đã chọn
+function clearDistanceMarkers() {
+    distanceMarkers.forEach(marker => map.removeLayer(marker)); // Xóa tất cả marker
+    distanceMarkers = []; // Xóa mảng marker
+    point1 = null;
+    point2 = null;
+
+    Swal.fire({
+        icon: 'info',
+        title: 'Điểm đã chọn đã bị xóa',
+        text: 'Bạn đã xóa các điểm tính khoảng cách.',
+    });
+}
+
+// Hàm tắt chế độ tính khoảng cách
+function disableDistanceCalculation() {
+    map.off('click'); // Hủy sự kiện click
+    clearDistanceMarkers(); // Xóa các điểm đã chọn
+    Swal.fire({
+        icon: 'info',
+        title: 'Tính khoảng cách đã bị tắt',
+        text: 'Các điểm đã chọn cũng đã bị xóa.',
+    });
+}
+
+// Hàm bật chế độ tính khoảng cách
+function enableDistanceMeasurement() {
+    Swal.fire({
+        icon: 'info',
+        title: 'Chọn điểm đầu tiên',
+        text: 'Nhấp vào bản đồ để chọn điểm đầu tiên.'
+    }).then(() => {
+        map.once('click', function (e) {
+            point1 = e.latlng;
+
+            const marker1 = L.marker([point1.lat, point1.lng])
+                .addTo(map)
+                .bindPopup("Điểm đầu tiên").openPopup();
+
+            distanceMarkers.push(marker1); // Lưu lại marker
+
+            Swal.fire({
+                icon: 'info',
+                title: 'Chọn điểm thứ hai',
+                text: 'Nhấp vào bản đồ để chọn điểm thứ hai.'
+            }).then(() => {
+                map.once('click', function (e) {
+                    point2 = e.latlng;
+
+                    const marker2 = L.marker([point2.lat, point2.lng])
+                        .addTo(map)
+                        .bindPopup("Điểm thứ hai").openPopup();
+
+                    distanceMarkers.push(marker2); // Lưu lại marker
+
+                    // Tính khoảng cách giữa hai điểm
+                    const distance = calculateDistance(point1.lat, point1.lng, point2.lat, point2.lng);
+
+                    // Hiển thị kết quả
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Khoảng cách',
+                        text: `Khoảng cách giữa hai điểm là: ${distance.toFixed(2)} km.`,
+                    }).then(() => {
+                        clearDistanceMarkers(); // Xóa các điểm sau khi hiển thị
+                    });
+                });
+            });
+        });
+    });
+}
+
+//======================================================================================================================
+
+//=========================Tính diện tích===============================================================================
+// Hàm tính diện tích cho hình vẽ (polygon hoặc multipolygon)
+function calculateArea(geoJsonFeature) {
+    const area = turf.area(geoJsonFeature); // Diện tích tính bằng mét vuông
+    const areaInKm2 = area / 1_000_00; // Chuyển đổi sang km²
+    return areaInKm2;
+}
+
+// Thêm sự kiện click vào các layer để tính diện tích
+drawnItems.on('click', function (e) {
+    const layer = e.layer;
+    if (layer.toGeoJSON) {
+        const geoJsonFeature = layer.toGeoJSON();
+        if (geoJsonFeature.geometry.type === "Polygon" || geoJsonFeature.geometry.type === "MultiPolygon") {
+            const area = calculateArea(geoJsonFeature);
+
+            Swal.fire({
+                icon: 'info',
+                title: 'Diện tích',
+                text: `Diện tích của hình vẽ là: ${area.toFixed(2)} km².`,
+            });
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Không phải là hình đa giác',
+                text: 'Chỉ có thể tính diện tích cho hình đa giác.',
+            });
+        }
+    }
+});
+//==================================================================================================================
+//=================================tải xuống dữ liệu GeoJSON từ các hình vẽ trên bản đồ.============================
+// Hàm xuất dữ liệu GeoJSON
+function exportToGeoJSON() {
+    // Lấy dữ liệu từ các hình đã vẽ
+    const data = drawnItems.toGeoJSON();
+
+    // Chuyển dữ liệu sang định dạng JSON
+    const json = JSON.stringify(data);
+
+    // Tạo một file và tải xuống
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    // Tạo liên kết để tải file
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "shapes.geojson";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    Swal.fire({
+        icon: "success",
+        title: "Xuất GeoJSON thành công!",
+        text: "File GeoJSON đã được tải xuống.",
+    });
+}
+
+// Thêm nút xuất GeoJSON vào thanh công cụ
+L.easyButton(
+    `<i class="fa fa-download" aria-hidden="true"></i>`,
+    exportToGeoJSON,
+    "Xuất GeoJSON"
+).addTo(map);
