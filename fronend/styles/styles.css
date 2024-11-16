@@ -172,3 +172,17 @@ body, html {
     display: block;
     margin: auto;
 }
+.leaflet-bar button {
+    width: 40px; /* Kích thước nút */
+    height: 40px;
+    line-height: 40px; /* Căn giữa nội dung trong nút */
+    text-align: center;
+}
+
+.leaflet-bar {
+    display: flex; /* Sử dụng Flexbox để căn chỉnh */
+    flex-direction: column; /* Các nút xếp theo chiều dọc */
+    gap: 0; /* Không có khoảng cách giữa các nút */
+    margin-bottom: -13px;
+}
+

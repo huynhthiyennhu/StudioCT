@@ -332,20 +332,8 @@ L.easyButton(
     },
     'Thêm Studio Mới' // Tooltip
 ).addTo(map);
-L.easyButton(
-    `<i class="fa fa-ruler-horizontal" aria-hidden="true"></i>`,
-    function () {
-        enableDistanceMeasurement();
-    },
-    'Tính khoảng cách giữa hai điểm'
-).addTo(map);
-L.easyButton(
-    `<i class="fa fa-times-circle" aria-hidden="true"></i>`,
-    function () {
-        clearDistanceMarkers(); // Gọi hàm xóa các điểm
-    },
-    'Xóa các điểm đã chọn'
-).addTo(map);
+
+
 // Sự kiện khi một hình dạng mới được vẽ
 map.on(L.Draw.Event.CREATED, function (event) {
     const layer = event.layer;
@@ -1150,6 +1138,20 @@ function findFeaturesWithinDistance(latlng, distance) {
 
 
 //====================================tính khoảng cách===============================================================
+L.easyButton(
+    `<i class="fa fa-ruler-horizontal" aria-hidden="true"></i>`,
+    function () {
+        enableDistanceMeasurement();
+    },
+    'Tính khoảng cách giữa hai điểm'
+).addTo(map);
+// L.easyButton(
+//     `<i class="fa fa-times-circle" aria-hidden="true"></i>`,
+//     function () {
+//         clearDistanceMarkers(); // Gọi hàm xóa các điểm
+//     },
+//     'Xóa các điểm đã chọn'
+// ).addTo(map);
 let point1 = null;
 let point2 = null;
 let distanceMarkers = []; // Lưu trữ các marker đã thêm
@@ -1247,7 +1249,7 @@ function enableDistanceMeasurement() {
 // Hàm tính diện tích cho hình vẽ (polygon hoặc multipolygon)
 function calculateArea(geoJsonFeature) {
     const area = turf.area(geoJsonFeature); // Diện tích tính bằng mét vuông
-    const areaInKm2 = area / 1_000_000; // Chuyển đổi sang km²
+    const areaInKm2 = area / 1_000_00; // Chuyển đổi sang km²
     return areaInKm2;
 }
 
@@ -1274,3 +1276,37 @@ drawnItems.on('click', function (e) {
     }
 });
 //==================================================================================================================
+//=================================tải xuống dữ liệu GeoJSON từ các hình vẽ trên bản đồ.============================
+// Hàm xuất dữ liệu GeoJSON
+function exportToGeoJSON() {
+    // Lấy dữ liệu từ các hình đã vẽ
+    const data = drawnItems.toGeoJSON();
+
+    // Chuyển dữ liệu sang định dạng JSON
+    const json = JSON.stringify(data);
+
+    // Tạo một file và tải xuống
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    // Tạo liên kết để tải file
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "shapes.geojson";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    Swal.fire({
+        icon: "success",
+        title: "Xuất GeoJSON thành công!",
+        text: "File GeoJSON đã được tải xuống.",
+    });
+}
+
+// Thêm nút xuất GeoJSON vào thanh công cụ
+L.easyButton(
+    `<i class="fa fa-download" aria-hidden="true"></i>`,
+    exportToGeoJSON,
+    "Xuất GeoJSON"
+).addTo(map);
