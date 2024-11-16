@@ -492,20 +492,33 @@ async function showAddStudioForm(selectedLatLng) {
         title: '<h4 class="text-primary mb-3">Thêm Studio Mới</h4>',
         html: `
             <style>
-                .swal2-popup { width: 500px; padding: 20px; }
-                .swal2-input, .swal2-select {
-                    width: 100%;
-                    padding: 8px;
-                    border-radius: 0.25rem;
-                    border: 1px solid #ced4da;
-                    margin-bottom: 15px;
-                }
-                .swal2-html-container label {
-                    display: block;
-                    margin-bottom: 5px;
-                    font-weight: 500;
-                    text-align: left;
-                }
+              /* Điều chỉnh cỡ chữ và khoảng cách */
+    .swal2-popup {
+        width: 500px;
+        padding: 20px;
+    }
+    .swal2-input, .swal2-select, .form-control, .form-select {
+        width: 100%;
+        padding: 8px;
+        border-radius: 0.25rem;
+        border: 1px solid #ced4da;
+        margin-bottom: 20px; /* Tăng khoảng cách giữa các form group */
+        font-size: 16px; /* Cỡ chữ 16px */
+    }
+    .swal2-html-container label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        text-align: left;
+        font-size: 16px; /* Cỡ chữ 16px */
+    }
+    .form-group {
+        margin-bottom: 20px; /* Tăng khoảng cách giữa các form group */
+    }
+    .text-muted {
+        font-size: 14px; /* Cỡ chữ nhỏ hơn cho thông tin bổ sung */
+        margin-top: 10px;
+    }
             </style>
             <div class="form-group">
                 <label for="studio-name" class="form-label">Tên Studio:</label>
@@ -728,11 +741,9 @@ function createMarker(studio) {
         selectedStudio = studio;
     });
 }
-
-
-// Hàm hiển thị chi tiết studio trong modal
-function showStudioDetail(studioId) { 
-    fetch(`http://localhost:8080/api/studios/${studioId}`) // Endpoint để lấy chi tiết studio
+// Hàm hiển thị chi tiết studio
+function showStudioDetail(studioId) {
+    fetch(`http://localhost:8080/api/studios/${studioId}`) // API lấy chi tiết studio
         .then(response => {
             if (!response.ok) {
                 throw new Error('Không thể lấy dữ liệu studio.');
@@ -740,101 +751,39 @@ function showStudioDetail(studioId) {
             return response.json();
         })
         .then(studio => {
+            // Hiển thị thông tin studio
             document.getElementById('studio-name').innerText = studio.name;
 
-
-            // Hiển thị hình ảnh
-            var imagesDiv = document.getElementById('studio-images');
+            // Hiển thị hình ảnh thumbnail
+            const imagesDiv = document.getElementById('studio-images');
             imagesDiv.innerHTML = '';
             if (studio.thumbnail) {
-                var thumbnailImage = document.createElement('img');
+                const thumbnailImage = document.createElement('img');
                 thumbnailImage.src = `http://localhost:8080/api/images/view/${studio.thumbnail}`;
-                thumbnailImage.alt = studio.name; // Đặt văn bản thay thế là tên studio
-                thumbnailImage.id = 'thumbnail-image'; // Gán ID cho ảnh để áp dụng CSS
-                imagesDiv.appendChild(thumbnailImage); // Thêm vào phần hiển thị ảnh
-            
+                thumbnailImage.alt = studio.name;
+                thumbnailImage.id = 'thumbnail-image';
+                imagesDiv.appendChild(thumbnailImage);
+
                 // Thêm sự kiện click vào thumbnail
                 thumbnailImage.addEventListener('click', function () {
-                    fetch(`http://localhost:8080/api/images/studio/${studioId}`) // API để lấy danh sách ảnh
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Không thể lấy danh sách ảnh.');
-                            }
-                            return response.json();
-                        })
-                        .then(images => {
-                            // Kiểm tra nếu không có ảnh thì không thực hiện gì
-                            if (images.length === 0) {
-                                console.log('Không có ảnh nào liên quan đến studio này.');
-                                return; // Thoát khỏi sự kiện nếu không có ảnh
-                            }
-            
-                            // Xử lý hiển thị danh sách ảnh
-                            var modalImages = document.createElement('div');
-                            modalImages.id = 'modal-images'; // Gán ID để quản lý modal
-                            modalImages.style.display = 'flex';
-                            modalImages.style.flexWrap = 'wrap';
-                            modalImages.style.justifyContent = 'center';
-                            modalImages.style.alignItems = 'center';
-                            modalImages.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-                            modalImages.style.position = 'fixed';
-                            modalImages.style.top = '0';
-                            modalImages.style.left = '0';
-                            modalImages.style.width = '100%';
-                            modalImages.style.height = '100%';
-                            modalImages.style.overflow = 'auto';
-                            modalImages.style.zIndex = '1000';
-                            modalImages.style.padding = '20px';
-            
-                            images.forEach(image => {
-                                var img = document.createElement('img');
-                                img.src = `http://localhost:8080/api/images/view/${image.imageUrl}`;
-                                img.alt = studio.name;
-                                img.style.width = '200px';
-                                img.style.margin = '10px';
-                                img.style.borderRadius = '8px';
-                                img.style.cursor = 'pointer';
-                                modalImages.appendChild(img);
-                            });
-            
-                            // Đóng modal khi click bên ngoài
-                            modalImages.addEventListener('click', function (event) {
-                                if (event.target === modalImages) {
-                                    modalImages.remove(); // Xóa modal khỏi DOM
-                                }
-                            });
-            
-                            document.body.appendChild(modalImages); // Thêm modal vào body
-                            console.log('Modal displayed'); // Log để kiểm tra modal
-                        })
-                        .catch(error => {
-                            console.error('Error fetching images:', error);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Lỗi!',
-                                text: 'Không thể lấy danh sách ảnh.'
-                            });
-                        });
+                    showStudioImages(studioId, studio.name); // Hiển thị danh sách ảnh
                 });
-            }
-            
-             else {
-                console.log('Không có ảnh thumbnail.');
+            } else {
+                console.log('Studio không có ảnh thumbnail.');
             }
 
-  
-            // Địa chỉ in đậm
+            // Hiển thị địa chỉ
             document.getElementById('studio-address').innerHTML = `<strong>Địa chỉ:</strong> ${studio.address}`;
 
-            // Số điện thoại
+            // Hiển thị số điện thoại
             document.getElementById('studio-phone').innerHTML = `<strong>Số điện thoại:</strong> ${studio.phone}`;
 
-            // Đánh giá in đậm
-            document.getElementById('studio-rating').innerHTML = `<strong>Đánh giá:</strong> ${studio.rating}`;
-
+            // Hiển thị đánh giá
+            const ratingText = studio.rating === 0 ? "Chưa có đánh giá" : `${studio.rating}⭐`;
+            document.getElementById('studio-rating').innerHTML = `<strong>Đánh giá:</strong> ${ratingText}`;
 
             // Hiển thị modal
-            var modal = document.getElementById('studio-detail');
+            const modal = document.getElementById('studio-detail');
             modal.style.display = 'block';
         })
         .catch(error => {
@@ -846,6 +795,157 @@ function showStudioDetail(studioId) {
             });
         });
 }
+
+// Hàm hiển thị danh sách ảnh
+function showStudioImages(studioId, studioName) {
+    fetch(`http://localhost:8080/api/images/studio/${studioId}`) // API lấy danh sách ảnh
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Không thể lấy danh sách ảnh.');
+            }
+            return response.json();
+        })
+        .then(images => {
+            // Tạo modal hiển thị danh sách ảnh
+            const modalImages = document.createElement('div');
+            modalImages.id = 'modal-images';
+            modalImages.style.display = 'flex';
+            modalImages.style.flexWrap = 'wrap';
+            modalImages.style.justifyContent = 'center';
+            modalImages.style.alignItems = 'center';
+            modalImages.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            modalImages.style.position = 'fixed';
+            modalImages.style.top = '0';
+            modalImages.style.left = '0';
+            modalImages.style.width = '100%';
+            modalImages.style.height = '100%';
+            modalImages.style.overflow = 'auto';
+            modalImages.style.zIndex = '1000';
+            modalImages.style.padding = '20px';
+
+            // Nếu không có ảnh, hiển thị nút thêm ảnh
+            if (images.length === 0) {
+                const addImageButton = createAddImageButton(studioId);
+                modalImages.appendChild(addImageButton);
+            } else {
+                // Hiển thị danh sách ảnh
+                images.forEach(image => {
+                    const img = document.createElement('img');
+                    img.src = `http://localhost:8080/api/images/view/${image.imageUrl}`;
+                    img.alt = `Ảnh từ studio ${studioId}`;
+                    img.style.width = '200px';
+                    img.style.margin = '10px';
+                    img.style.borderRadius = '8px';
+                    img.style.cursor = 'pointer';
+                    modalImages.appendChild(img);
+                });
+
+                // Thêm nút thêm ảnh sau danh sách ảnh
+                const addImageButton = createAddImageButton(studioId);
+                modalImages.appendChild(addImageButton);
+            }
+
+            // Đóng modal khi click bên ngoài
+            modalImages.addEventListener('click', function (event) {
+                if (event.target === modalImages) {
+                    modalImages.remove(); // Xóa modal khỏi DOM
+                }
+            });
+
+            document.body.appendChild(modalImages); // Thêm modal vào body
+        })
+        .catch(error => {
+            console.error('Error fetching images:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi!',
+                text: 'Không thể lấy danh sách ảnh.'
+            });
+        });
+}
+
+// Hàm tạo nút thêm ảnh
+function createAddImageButton(studioId) {
+    const addImageButton = document.createElement('div');
+    addImageButton.innerHTML = '+';
+    addImageButton.style.width = '50px';
+    addImageButton.style.height = '50px';
+    addImageButton.style.display = 'flex';
+    addImageButton.style.justifyContent = 'center';
+    addImageButton.style.alignItems = 'center';
+    addImageButton.style.borderRadius = '50%';
+    addImageButton.style.backgroundColor = '#007bff';
+    addImageButton.style.color = '#fff';
+    addImageButton.style.fontSize = '24px';
+    addImageButton.style.cursor = 'pointer';
+    addImageButton.style.marginTop = '20px';
+    addImageButton.addEventListener('click', function () {
+        showAddImageForm(studioId); // Gọi hàm thêm ảnh
+    });
+    return addImageButton;
+}
+
+// Hàm hiển thị form thêm ảnh
+function showAddImageForm(studioId) {
+    Swal.fire({
+        title: 'Thêm ảnh mới',
+        html: `
+            <input type="file" id="image-upload" accept="image/*" class="swal2-input" multiple>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Thêm',
+        preConfirm: () => {
+            const fileInput = document.getElementById('image-upload');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                Swal.showValidationMessage('Vui lòng chọn ít nhất một tệp hình ảnh.');
+                return false;
+            }
+            return Array.from(fileInput.files); // Trả về danh sách tệp ảnh
+        }
+    }).then(result => {
+        if (result.isConfirmed) {
+            const files = result.value;
+
+            // Tạo FormData để gửi dữ liệu
+            const formData = new FormData();
+            files.forEach(file => {
+                formData.append('files', file);
+            });
+
+            // Gửi API thêm ảnh
+            fetch(`http://localhost:8080/api/images/studio/${studioId}`, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Không thể thêm ảnh.');
+                    }
+                    return response.json();
+                })
+                .then(() => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công!',
+                        text: 'Ảnh đã được thêm thành công.'
+                    });
+
+                    // Làm mới danh sách ảnh
+                    document.querySelector('#modal-images').remove();
+                    showStudioImages(studioId); // Làm mới modal hiển thị danh sách ảnh
+                })
+                .catch(error => {
+                    console.error('Error uploading images:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi!',
+                        text: 'Không thể thêm ảnh.'
+                    });
+                });
+        }
+    });
+}
+
 
 // Đóng modal khi nhấp vào nút đóng
 var closeButton = document.querySelector('.close-button');
@@ -1013,6 +1113,8 @@ if (routeButton) {
 //=====================================================================================================================
 // Hàm hiển thị form tìm kiếm gần tôi sử dụng SweetAlert2
 var clickLocationLayer = L.layerGroup().addTo(map);
+var nearbyFeaturesLayer = L.layerGroup().addTo(map); // Lớp để lưu các studio gần
+var bufferLayer = null; // Biến để lưu buffer hiện tại
 
 function showSearchNearbyForm() {
     Swal.fire({
@@ -1028,7 +1130,7 @@ function showSearchNearbyForm() {
             if (!radius) {
                 Swal.showValidationMessage(`Vui lòng nhập bán kính tìm kiếm.`);
             }
-            return { radius: radius };
+            return { radius: parseFloat(radius) };
         }
     }).then((result) => {
         if (result.isConfirmed) {
@@ -1036,10 +1138,11 @@ function showSearchNearbyForm() {
             if (radius) {
                 // Lấy vị trí hiện tại của người dùng
                 if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(function(position) {
+                    navigator.geolocation.getCurrentPosition(function (position) {
                         var userLat = position.coords.latitude;
                         var userLng = position.coords.longitude;
-                        console.log(radius);
+
+                        // Fetch studios gần vị trí người dùng
                         fetch(`http://localhost:8080/api/studios/nearby?latitude=${userLat}&longitude=${userLng}&radius=${radius}`)
                             .then(response => {
                                 if (!response.ok) {
@@ -1050,19 +1153,52 @@ function showSearchNearbyForm() {
                             .then(data => {
                                 // Xóa các layer cũ
                                 clickLocationLayer.clearLayers();
-                                // nearbyFeaturesLayer.clearLayers();
-                               
+                                nearbyFeaturesLayer.clearLayers();
+                                if (bufferLayer) {
+                                    map.removeLayer(bufferLayer);
+                                }
+
+                                // Vẽ buffer (vùng bán kính)
+                                bufferLayer = L.circle([userLat, userLng], {
+                                    radius: radius * 1000, // Chuyển từ km sang mét
+                                    color: 'blue',
+                                    fillColor: '#add8e6',
+                                    fillOpacity: 0.3
+                                }).addTo(map);
+
                                 // Thêm marker cho vị trí người dùng
-                                var userMarker = L.marker([userLat, userLng], {icon: userIcon}).addTo(clickLocationLayer);
+                                var userMarker = L.marker([userLat, userLng], { icon: userIcon }).addTo(clickLocationLayer);
                                 userMarker.bindPopup("Vị trí của bạn").openPopup();
 
-                                // Thêm marker mới cho các studio gần
-                                data.forEach(studio => {
-                                    createMarker(studio);
-                                });
+                                // Thêm marker cho các studio gần
+                                if (data.length > 0) {
+                                    data.forEach(studio => {
+                                        var marker = L.marker([studio.latitude, studio.longitude], {
+                                            icon: L.icon({
+                                                iconUrl: './assets/images/highlight.png', // Thay bằng icon nổi bật
+                                                iconSize: [30, 40],
+                                                iconAnchor: [15, 40]
+                                            })
+                                        }).addTo(nearbyFeaturesLayer);
 
-                                // Đặt lại view về vị trí người dùng
-                                map.setView([userLat, userLng], 13);
+                                        marker.bindPopup(`
+                                            <b>${studio.name}</b><br>
+                                            ${studio.address}<br>
+                                            Đánh giá: ${studio.rating || 'Chưa có đánh giá'}
+                                        `);
+                                    });
+
+                                    // Đặt lại view để bao quát tất cả studio
+                                    var bounds = L.latLngBounds(data.map(studio => [studio.latitude, studio.longitude]));
+                                    bounds.extend([userLat, userLng]); // Bao gồm cả vị trí người dùng
+                                    map.fitBounds(bounds);
+                                } else {
+                                    Swal.fire({
+                                        icon: 'info',
+                                        title: 'Không có studio nào gần bạn!',
+                                        text: 'Vui lòng thử lại với bán kính lớn hơn.'
+                                    });
+                                }
                             })
                             .catch(error => {
                                 console.error('Error:', error);
@@ -1072,7 +1208,7 @@ function showSearchNearbyForm() {
                                     text: 'Không thể tìm kiếm studio gần bạn.'
                                 });
                             });
-                    }, function(error) {
+                    }, function (error) {
                         Swal.fire({
                             icon: 'error',
                             title: 'Lỗi!',
@@ -1096,7 +1232,6 @@ function showSearchNearbyForm() {
         }
     });
 }
-
 
 
 
