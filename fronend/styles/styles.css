@@ -116,8 +116,8 @@ body, html {
 /* Container cho các chức năng */
 #controls {
     position: absolute;
-    top: 360px;
-    left: 10px;
+    bottom: 10px;
+    right: 10px;
     z-index: 1000;
     background: rgba(255, 255, 255, 0.9);
     padding: 10px;
@@ -146,4 +146,29 @@ body, html {
     transform: scale(1.1);
     transition: transform 0.2s;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+}
+
+.custom-toolbar a {
+    display: block;
+    margin: 5px;
+    width: 36px;
+    height: 36px;
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    line-height: 36px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.custom-toolbar a:hover {
+    background: #f4f4f4;
+}
+
+.custom-toolbar img {
+    width: 24px;
+    height: 24px;
+    display: block;
+    margin: auto;
 }

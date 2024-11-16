@@ -6,7 +6,6 @@ C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\contr
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\controller\StudioTypeController.java
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\dto\DistrictDTO.java
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\dto\ImageDTO.java
-C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\dto\StreetDTO.java
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\dto\StudioDTO.java
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\dto\StudioTypeDTO.java
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\dto\WardDTO.java
@@ -14,13 +13,11 @@ C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\excep
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\exception\ResourceNotFoundException.java
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\model\District.java
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\model\Image.java
-C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\model\Street.java
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\model\Studio.java
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\model\StudioType.java
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\model\Ward.java
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\repository\DistrictRepository.java
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\repository\ImageRepository.java
-C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\repository\StreetRepository.java
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\repository\StudioRepository.java
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\repository\StudioTypeRepository.java
 C:\Users\admin\Downloads\HTTTDL\StudioCT\src\main\java\com\htttdl\StudioCT\repository\WardRepository.java
